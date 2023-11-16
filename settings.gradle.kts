@@ -14,7 +14,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "web3-core"
+rootProject.name = "Web3Core"
 include(":core")
 include(":solana")
 
