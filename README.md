@@ -1,4 +1,4 @@
-# Web3Kt
+# Web3 Core
 Multiplatform Web3 Library
 
 # Usage
