@@ -17,6 +17,13 @@ val Blockhash.blockhash get() = this.bytes
 
 sealed class Message {
 
+    abstract val signatureCount: UByte
+    abstract val readOnlyAccounts: UByte
+    abstract val readOnlyNonSigners: UByte
+    abstract val accounts: List<SolanaPublicKey>
+    abstract val blockhash: Blockhash
+    abstract val instructions: List<Instruction>
+
     companion object {
         fun from(bytes: ByteArray) = TransactionFormat.decodeFromByteArray(MessageSerializer, bytes)
     }
@@ -82,23 +89,23 @@ sealed class Message {
 
 @Serializable
 data class LegacyMessage(
-    val signatureCount: UByte,
-    val readOnlyAccounts: UByte,
-    val readOnlyNonSigners: UByte,
-    val accounts: List<SolanaPublicKey>,
-    val blockhash: Blockhash,
-    val instructions: List<Instruction>
+    override val signatureCount: UByte,
+    override val readOnlyAccounts: UByte,
+    override val readOnlyNonSigners: UByte,
+    override val accounts: List<SolanaPublicKey>,
+    override val blockhash: Blockhash,
+    override val instructions: List<Instruction>
 ) : Message()
 
 @Serializable
 data class VersionedMessage(
     @Transient val version: Byte = 0,
-    val signatureCount: UByte,
-    val readOnlyAccounts: UByte,
-    val readOnlyNonSigners: UByte,
-    val accounts: List<SolanaPublicKey>,
-    val blockhash: Blockhash,
-    val instructions: List<Instruction>,
+    override val signatureCount: UByte,
+    override val readOnlyAccounts: UByte,
+    override val readOnlyNonSigners: UByte,
+    override val accounts: List<SolanaPublicKey>,
+    override val blockhash: Blockhash,
+    override val instructions: List<Instruction>,
     val addressTableLookups: List<AddressTableLookup>
 ) : Message()
 
@@ -144,3 +151,5 @@ object MessageSerializer : KSerializer<Message> {
         }
     }
 }
+
+fun Message.toUnsignedTransaction(): Transaction = Transaction(this)

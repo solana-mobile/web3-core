@@ -12,6 +12,8 @@ data class Transaction(
     @Serializable(with = MessageSerializer::class) val message: Message
 ) {
 
+    constructor(message: Message): this(buildList(message.signatureCount.toInt()) { ByteArray(size) }, message)
+
     companion object {
         fun from(bytes: ByteArray) = TransactionFormat.decodeFromByteArray(serializer(), bytes)
     }

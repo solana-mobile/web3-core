@@ -15,6 +15,8 @@ open class ByteStringSerializer(val length: Int) : KSerializer<ByteArray> {
         }
 
     override fun serialize(encoder: Encoder, value: ByteArray) {
+        if (value.isEmpty()) ByteArray(length).forEach { encoder.encodeByte(it) }
+        check(value.size == length) { "Cannot serialize, provided byte array has incorrect size { ${value.size} }" }
         value.forEach { encoder.encodeByte(it) }
     }
 }
