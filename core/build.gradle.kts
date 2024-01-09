@@ -5,6 +5,7 @@ plugins {
 }
 
 val artifactId: String by project
+val moduleArtifactId = "$artifactId-core"
 
 kotlin {
     jvm {
@@ -40,5 +41,5 @@ kotlin {
 }
 
 mavenPublishing {
-    coordinates(group as String, artifactId, version as String)
+    coordinates(group as String, moduleArtifactId, version as String)
 }
