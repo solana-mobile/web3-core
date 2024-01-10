@@ -1,6 +1,6 @@
 package com.solana.publickey
 
-import com.solana.encoders.Base58
+import com.funkatronics.encoders.Base58
 import com.solana.serialization.ByteStringSerializer
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
