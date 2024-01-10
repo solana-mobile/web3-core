@@ -4,8 +4,8 @@ plugins {
     id("com.vanniktech.maven.publish")
 }
 
-val artifactId: String by project
-val moduleArtifactId = "$artifactId-core"
+val artifactIdPrefix: String by project
+val moduleArtifactId = "$artifactIdPrefix-core"
 
 kotlin {
     jvm {
@@ -23,7 +23,7 @@ kotlin {
         macosArm64()
     ).forEach {
         it.binaries.framework {
-            baseName = artifactId
+            baseName = moduleArtifactId
         }
     }
     sourceSets {
