@@ -4,7 +4,7 @@ import com.solana.serialization.ByteStringSerializer
 import com.solana.serialization.TransactionFormat
 import kotlinx.serialization.*
 
-object SignatureSerializer : ByteStringSerializer(64)
+object SignatureSerializer : ByteStringSerializer(Transaction.SIGNATURE_LENGTH_BYTES)
 
 @Serializable
 data class Transaction(
@@ -12,9 +12,11 @@ data class Transaction(
     @Serializable(with = MessageSerializer::class) val message: Message
 ) {
 
-    constructor(message: Message): this(buildList(message.signatureCount.toInt()) { ByteArray(size) }, message)
+    constructor(message: Message):
+            this(buildList(message.signatureCount.toInt()) { ByteArray(SIGNATURE_LENGTH_BYTES) }, message)
 
     companion object {
+        const val SIGNATURE_LENGTH_BYTES = 64
         fun from(bytes: ByteArray) = TransactionFormat.decodeFromByteArray(serializer(), bytes)
     }
 
