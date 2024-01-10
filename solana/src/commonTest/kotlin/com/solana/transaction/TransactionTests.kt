@@ -1,6 +1,6 @@
 package com.solana.transaction
 
-import com.solana.encoders.Base64
+import com.funkatronics.encoders.Base64
 import com.solana.publickey.SolanaPublicKey
 import com.solana.serialization.TransactionFormat
 import kotlin.test.Test
