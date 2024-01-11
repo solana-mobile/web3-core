@@ -13,7 +13,7 @@ data class Transaction(
 ) {
 
     constructor(message: Message):
-            this(buildList(message.signatureCount.toInt()) { ByteArray(SIGNATURE_LENGTH_BYTES) }, message)
+            this(List(message.signatureCount.toInt()) { ByteArray(SIGNATURE_LENGTH_BYTES) }, message)
 
     companion object {
         const val SIGNATURE_LENGTH_BYTES = 64
