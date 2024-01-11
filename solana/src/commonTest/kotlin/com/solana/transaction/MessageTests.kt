@@ -116,8 +116,8 @@ class MessageTests {
     @Test
     fun testMessageToUnsignedTransactionMultipleSignatures() {
         // given
-        val account1 = SolanaPublicKey(Base64.decode("XJy50755nz75BGthIrxe7XIQ9WkcMxgIOCmqEM30qq4"))
-        val account2 = SolanaPublicKey(Base64.decode("XJy50755nz75BGthIrxe7XIQ9WkcMxgIOCmqEM30qq5"))
+        val account1 = SolanaPublicKey(Base64.decode("XJy40744nz74BGthIrxe7XIQ9WkcMxgIOCmqEM30qq4"))
+        val account2 = SolanaPublicKey(Base64.decode("YJy50755nz75BGthIrxe7XIQ9WkcMxgIOCmqEM30qq5"))
         val programId = SolanaPublicKey.from("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr")
         val blockhash = Blockhash(ByteArray(32))
         val data = "hello world ".encodeToByteArray()
