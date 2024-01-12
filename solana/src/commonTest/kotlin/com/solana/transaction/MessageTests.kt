@@ -5,6 +5,7 @@ import com.solana.publickey.SolanaPublicKey
 import com.solana.util.asVarint
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
+import kotlin.test.assertEquals
 
 class MessageTests {
 
@@ -82,5 +83,70 @@ class MessageTests {
 
         // then
         assertContentEquals(memoInstructionTemplate, serializedMessage)
+    }
+
+    @Test
+    fun testMessageToUnsignedTransaction() {
+        // given
+        val account = SolanaPublicKey(Base64.decode("XJy50755nz75BGthIrxe7XIQ9WkcMxgIOCmqEM30qq4"))
+        val programId = SolanaPublicKey.from("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr")
+        val blockhash = Blockhash(ByteArray(32))
+        val data = "hello world ".encodeToByteArray()
+        val expectedSignatureCount = 1
+        val expectedSignature = ByteArray(Transaction.SIGNATURE_LENGTH_BYTES)
+
+        val memoInstruction = TransactionInstruction(
+            programId,
+            listOf(AccountMeta(account, true, true)),
+            data
+        )
+
+        // when
+        val transaction = Message.Builder()
+            .addInstruction(memoInstruction)
+            .setRecentBlockhash(blockhash)
+            .build()
+            .toUnsignedTransaction()
+
+        // then
+        assertEquals(expectedSignatureCount, transaction.signatures.size)
+        assertContentEquals(expectedSignature, transaction.signatures.first())
+    }
+
+    @Test
+    fun testMessageToUnsignedTransactionMultipleSignatures() {
+        // given
+        val account1 = SolanaPublicKey(Base64.decode("XJy40744nz74BGthIrxe7XIQ9WkcMxgIOCmqEM30qq4"))
+        val account2 = SolanaPublicKey(Base64.decode("YJy50755nz75BGthIrxe7XIQ9WkcMxgIOCmqEM30qq5"))
+        val programId = SolanaPublicKey.from("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr")
+        val blockhash = Blockhash(ByteArray(32))
+        val data = "hello world ".encodeToByteArray()
+        val expectedSignatureCount = 2
+        val expectedSignature = ByteArray(Transaction.SIGNATURE_LENGTH_BYTES)
+
+        val memoInstruction1 = TransactionInstruction(
+            programId,
+            listOf(AccountMeta(account1, true, true)),
+            data
+        )
+
+        val memoInstruction2 = TransactionInstruction(
+            programId,
+            listOf(AccountMeta(account2, true, true)),
+            data
+        )
+
+        // when
+        val transaction = Message.Builder()
+            .addInstruction(memoInstruction1)
+            .addInstruction(memoInstruction2)
+            .setRecentBlockhash(blockhash)
+            .build()
+            .toUnsignedTransaction()
+
+        // then
+        assertEquals(expectedSignatureCount, transaction.signatures.size)
+        assertContentEquals(expectedSignature, transaction.signatures[0])
+        assertContentEquals(expectedSignature, transaction.signatures[1])
     }
 }
