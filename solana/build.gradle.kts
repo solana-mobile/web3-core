@@ -30,7 +30,7 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 api(project(mapOf("path" to ":core")))
-                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0-RC")
+                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
                 implementation("io.github.funkatronics:multimult:0.2.0")
             }
         }
@@ -39,7 +39,7 @@ kotlin {
                 implementation(kotlin("test"))
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
                 implementation("com.diglol.crypto:pkc:0.1.5")
-                implementation("io.github.funkatronics:rpccore:0.2.0")
+                implementation("io.github.funkatronics:rpccore:0.2.3")
             }
         }
     }
