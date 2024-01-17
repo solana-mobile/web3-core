@@ -39,7 +39,7 @@ kotlin {
                 implementation(kotlin("test"))
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
                 implementation("com.diglol.crypto:pkc:0.1.5")
-                implementation("io.github.funkatronics:rpccore:0.2.3")
+                implementation("com.solanamobile:rpc-core:0.2.4")
             }
         }
     }
