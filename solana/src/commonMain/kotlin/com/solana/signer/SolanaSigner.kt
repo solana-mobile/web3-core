@@ -26,7 +26,6 @@ abstract class SolanaSigner : Ed25519Signer() {
 
 suspend fun SolanaSigner.signTransaction(transaction: Transaction): Transaction =
     transaction.message.run {
-        val publicKey = SolanaPublicKey(publicKey)
         val signers = accounts.take(transaction.message.signatureCount.toInt())
         val signerIndex = signers.indexOf(publicKey)
         require(signerIndex != -1) {
