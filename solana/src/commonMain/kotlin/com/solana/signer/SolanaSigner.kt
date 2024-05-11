@@ -5,6 +5,7 @@ import com.solana.transaction.Message
 import com.solana.transaction.Transaction
 
 abstract class SolanaSigner : Ed25519Signer() {
+    override abstract val publicKey: SolanaPublicKey
     abstract suspend fun signAndSendTransaction(transaction: Transaction): Result<String>
 
     @Deprecated(
