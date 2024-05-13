@@ -31,7 +31,7 @@ kotlin {
             dependencies {
                 api(project(mapOf("path" to ":core")))
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
-                implementation("io.github.funkatronics:multimult:0.2.0")
+                implementation("io.github.funkatronics:multimult:0.2.1")
             }
         }
         val commonTest by getting {
