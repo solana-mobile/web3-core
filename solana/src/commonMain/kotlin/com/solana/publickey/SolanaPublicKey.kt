@@ -12,7 +12,7 @@ import kotlinx.serialization.encoding.Encoder
 open class SolanaPublicKey(override val bytes: ByteArray) : PublicKey {
 
     init {
-        check (bytes.size == PUBLIC_KEY_LENGTH)
+        require(bytes.size == PUBLIC_KEY_LENGTH) { "Invalid public key length: ${bytes.size}" }
     }
 
     override val length = PUBLIC_KEY_LENGTH
