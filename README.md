@@ -1,6 +1,9 @@
 # Web3 Core
 Multiplatform Web3 Library
 
+## ⚠️ Experimental
+This library is still under development. The library is functional and being used downstrewam by the likes of [SolanaKMP](https://github.com/metaplex-foundation/solana-kmp). Breaking changes ~~may~~ will be added leading up to a v1.0 API. You have been warned. 
+
 # Usage
 
 ## Solana
