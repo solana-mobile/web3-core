@@ -5,7 +5,7 @@ import com.solana.transaction.Message
 import com.solana.transaction.Transaction
 
 abstract class SolanaSigner : Ed25519Signer() {
-    override abstract val publicKey: SolanaPublicKey
+    abstract override val publicKey: SolanaPublicKey
     abstract suspend fun signAndSendTransaction(transaction: Transaction): Result<String>
 
     @Deprecated(
@@ -25,20 +25,34 @@ abstract class SolanaSigner : Ed25519Signer() {
     }
 }
 
-suspend fun SolanaSigner.signTransaction(transaction: Transaction): Transaction =
-    transaction.message.run {
-        val signers = accounts.take(transaction.message.signatureCount.toInt())
-        val signerIndex = signers.indexOf(publicKey)
-        require(signerIndex != -1) {
-            "Transaction does not require a signature from this public key (${publicKey.base58()})"
-        }
+suspend fun SolanaSigner.signTransaction(transaction: Transaction): Result<Transaction> =
+    signTransaction(transaction.message)
 
-        val signature = signMessage(this)
-        Transaction(transaction.signatures.toMutableList().apply {
-            set(signerIndex, signature)
-        }, this)
+suspend fun SolanaSigner.signTransaction(transactionMessage: Message): Result<Transaction> {
+    val signers = transactionMessage.accounts.take(transactionMessage.signatureCount.toInt())
+    val signerIndex = signers.indexOf(publicKey)
+//    require(signerIndex != -1) {
+//        "Transaction does not require a signature from this public key (${publicKey.base58()})"
+//    }
+    if (signerIndex == -1) {
+        return Result.failure(IllegalArgumentException(
+            "Transaction does not require a signature from this public key (${publicKey.base58()})"
+        ))
     }
 
-suspend fun SolanaSigner.signMessage(message: Message): ByteArray {
-    return signPayload(message.serialize())
+    return signPayload(transactionMessage.serialize()).map { signature ->
+        Transaction(MutableList(transactionMessage.signatureCount.toInt()) { ByteArray(ownerLength) }.apply {
+            set(signerIndex, signature)
+        }, transactionMessage)
+    }
+}
+
+suspend fun SolanaSigner.signMessage(message: ByteArray): Result<ByteArray> {
+//    require(runCatching { Message.from(message) }.isFailure) {
+//        "Attempting to sign a transaction as off chain message"
+//    }
+    runCatching { Message.from(message) }.onSuccess {
+        return Result.failure(IllegalArgumentException("Attempting to sign a transaction as off chain message"))
+    }
+    return signPayload(message)
 }
