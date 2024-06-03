@@ -1,7 +1,7 @@
 plugins {
-    kotlin("multiplatform")
-    kotlin("plugin.serialization") version "1.9.21"
-    id("com.vanniktech.maven.publish")
+    alias(libs.plugins.kotlin.multiplatform)
+    alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.publish)
 }
 
 val artifactIdPrefix: String by project
@@ -30,16 +30,16 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 api(project(mapOf("path" to ":core")))
-                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
-                implementation("io.github.funkatronics:multimult:0.2.1")
+                implementation(libs.kotlinx.serialization.json)
+                implementation(libs.multimult)
             }
         }
         val commonTest by getting {
             dependencies {
-                implementation(kotlin("test"))
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
-                implementation("com.diglol.crypto:pkc:0.1.5")
-                implementation("com.solanamobile:rpc-core:0.2.4")
+                implementation(libs.kotlin.test)
+                implementation(libs.kotlinx.coroutines.test)
+                implementation(libs.crypto)
+                implementation(libs.rpc.core)
             }
         }
     }
