@@ -1,0 +1,23 @@
+[versions]
+kotlinxCoroutines= "1.7.3"
+
+# Plugin versions
+androidGradlePlugin = "8.0.2"
+kotlin = "1.9.21"
+kotlinSerialization = "1.6.2"
+vanniktechMavenPublish = "0.25.3"
+
+[libraries]
+crypto = { group = "com.diglol.crypto", name = "crypto", version = "0.1.5" }
+kotlin-test = { group = "org.jetbrains.kotlin", name = "kotlin-test" }
+kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinSerialization" }
+#kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "kotlinxCoroutines" }
+kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "kotlinxCoroutines" }
+multimult = { group = "io.github.funkatronics", name = "multimult", version = "0.2.1" }
+rpc-core = { group = "com.solanamobile", name = "rpc-core", version = "0.2.5" }
+
+[plugins]
+android-library = { id = "com.android.library", version.ref = "androidGradlePlugin" }
+kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+publish = { id = "com.vanniktech.maven.publish", version.ref = "vanniktechMavenPublish" }
