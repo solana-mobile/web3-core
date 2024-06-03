@@ -10,9 +10,6 @@ import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
-
-import com.solana.signer.signMessage as newSignMessage
-
 class SignerTests {
 
     class TestSigner(val keyPair: KeyPair) : SolanaSigner() {
@@ -46,7 +43,7 @@ class SignerTests {
             .build()
 
         // when
-        val result = signer.newSignMessage(transactionMessage.serialize())
+        val result = signer.signOffChainMessage(transactionMessage.serialize())
 
         // then
         assertTrue { result.isFailure }
@@ -90,7 +87,7 @@ class SignerTests {
         val payload = Random.nextBytes(100)
 
         // when
-        val result = signer.newSignMessage(payload)
+        val result = signer.signOffChainMessage(payload)
 
         // then
         assertTrue { result.isSuccess }
@@ -104,7 +101,7 @@ class SignerTests {
         val message = "hello world ".encodeToByteArray()
 
         // when
-        val result = signer.newSignMessage(message)
+        val result = signer.signOffChainMessage(message)
 
         // then
         assertTrue { result.isSuccess }
