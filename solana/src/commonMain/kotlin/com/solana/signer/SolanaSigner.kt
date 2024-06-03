@@ -23,36 +23,32 @@ abstract class SolanaSigner : Ed25519Signer() {
     open fun signTransaction(transaction: ByteArray): ByteArray {
         throw NotImplementedError("signTransaction is deprecated, use the asynchronous signPayload method or an equivalent extension function")
     }
-}
 
-suspend fun SolanaSigner.signTransaction(transaction: Transaction): Result<Transaction> =
-    signTransaction(transaction.message)
+    suspend fun SolanaSigner.signTransaction(transaction: Transaction): Result<Transaction> =
+        signTransaction(transaction.message)
 
-suspend fun SolanaSigner.signTransaction(transactionMessage: Message): Result<Transaction> {
-    val signers = transactionMessage.accounts.take(transactionMessage.signatureCount.toInt())
-    val signerIndex = signers.indexOf(publicKey)
-//    require(signerIndex != -1) {
-//        "Transaction does not require a signature from this public key (${publicKey.base58()})"
-//    }
-    if (signerIndex == -1) {
-        return Result.failure(IllegalArgumentException(
-            "Transaction does not require a signature from this public key (${publicKey.base58()})"
-        ))
+    suspend fun SolanaSigner.signTransaction(transactionMessage: Message): Result<Transaction> {
+        val signers = transactionMessage.accounts.take(transactionMessage.signatureCount.toInt())
+        val signerIndex = signers.indexOf(publicKey)
+        if (signerIndex == -1) {
+            return Result.failure(IllegalArgumentException(
+                "Transaction does not require a signature from this public key (${publicKey.base58()})"
+            ))
+        }
+
+        return signPayload(transactionMessage.serialize()).map { signature ->
+            Transaction(MutableList(transactionMessage.signatureCount.toInt()) { ByteArray(ownerLength) }.apply {
+                set(signerIndex, signature)
+            }, transactionMessage)
+        }
     }
 
-    return signPayload(transactionMessage.serialize()).map { signature ->
-        Transaction(MutableList(transactionMessage.signatureCount.toInt()) { ByteArray(ownerLength) }.apply {
-            set(signerIndex, signature)
-        }, transactionMessage)
+    suspend fun SolanaSigner.signMessage(message: ByteArray): Result<ByteArray> {
+        runCatching { Message.from(message) }.onSuccess {
+            return Result.failure(IllegalArgumentException("Attempting to sign a transaction as off chain message"))
+        }
+        return signPayload(message)
     }
 }
 
-suspend fun SolanaSigner.signMessage(message: ByteArray): Result<ByteArray> {
-//    require(runCatching { Message.from(message) }.isFailure) {
-//        "Attempting to sign a transaction as off chain message"
-//    }
-    runCatching { Message.from(message) }.onSuccess {
-        return Result.failure(IllegalArgumentException("Attempting to sign a transaction as off chain message"))
-    }
-    return signPayload(message)
-}
+
