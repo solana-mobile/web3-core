@@ -8,10 +8,10 @@ abstract class SolanaSigner : Ed25519Signer() {
     abstract override val publicKey: SolanaPublicKey
     abstract suspend fun signAndSendTransaction(transaction: Transaction): Result<String>
 
-    suspend fun signTransaction(transaction: Transaction): Result<Transaction> =
+    open suspend fun signTransaction(transaction: Transaction): Result<Transaction> =
         signTransaction(transaction.message)
 
-    suspend fun signTransaction(transactionMessage: Message): Result<Transaction> {
+    open suspend fun signTransaction(transactionMessage: Message): Result<Transaction> {
         val signers = transactionMessage.accounts.take(transactionMessage.signatureCount.toInt())
         val signerIndex = signers.indexOf(publicKey)
         if (signerIndex == -1) {
