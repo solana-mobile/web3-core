@@ -8,6 +8,7 @@ kotlinSerialization = "1.6.2"
 vanniktechMavenPublish = "0.25.3"
 
 [libraries]
+borsh = { group = "io.github.funkatronics", name = "kborsh", version = "0.1.0" }
 crypto = { group = "com.diglol.crypto", name = "crypto", version = "0.1.5" }
 kotlin-test = { group = "org.jetbrains.kotlin", name = "kotlin-test" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinSerialization" }

@@ -31,6 +31,7 @@ kotlin {
             dependencies {
                 api(project(mapOf("path" to ":core")))
                 implementation(libs.kotlinx.serialization.json)
+                implementation(libs.borsh)
                 implementation(libs.multimult)
             }
         }
