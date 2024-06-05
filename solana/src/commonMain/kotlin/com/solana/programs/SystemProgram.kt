@@ -31,6 +31,7 @@ object SystemProgram {
             }.borshEncodedBytes
         )
 
+    @JvmStatic
     fun createAccount(
         fromPublicKey: SolanaPublicKey,
         newAccountPublickey: SolanaPublicKey,
