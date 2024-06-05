@@ -6,5 +6,5 @@ interface Signer {
     val publicKey: PublicKey
     val ownerLength: Number
     val signatureLength: Number
-    suspend fun signPayload(payload: ByteArray): ByteArray
+    suspend fun signPayload(payload: ByteArray): Result<ByteArray>
 }
