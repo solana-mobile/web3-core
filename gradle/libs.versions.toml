@@ -5,6 +5,7 @@ kotlinxCoroutines= "1.7.3"
 mobileWalletAdapter="2.0.2"
 mockitoInline = "5.2.0"
 mockitoKotlin = "4.1.0"
+robolectric = "4.12.2"
 
 # Plugin versions
 androidGradlePlugin = "8.0.2"
@@ -25,6 +26,7 @@ mockito-kotlin = { module = "org.mockito.kotlin:mockito-kotlin", version.ref = "
 multimult = { group = "io.github.funkatronics", name = "multimult", version = "0.2.1" }
 mwa-clientlib-ktx = { module = "com.solanamobile:mobile-wallet-adapter-clientlib-ktx", version.ref = "mobileWalletAdapter" }
 mwa-walletlib = { module = "com.solanamobile:mobile-wallet-adapter-walletlib", version.ref = "mobileWalletAdapter" }
+robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
 rpc-core = { group = "com.solanamobile", name = "rpc-core", version = "0.2.5" }
 
 [plugins]

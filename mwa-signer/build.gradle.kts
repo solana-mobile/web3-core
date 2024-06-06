@@ -2,7 +2,11 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.publish)
 }
+
+val artifactIdPrefix: String by project
+val moduleArtifactId = "$artifactIdPrefix-mwa-signer"
 
 android {
     namespace = "com.solana.signer.mwa"
@@ -43,6 +47,9 @@ dependencies {
     testImplementation(libs.mockito.kotlin)
     testImplementation(libs.mwa.walletlib)
     testImplementation(libs.pkc)
+    testImplementation(libs.robolectric)
+}
 
-    testImplementation("org.robolectric:robolectric:4.12.2")
+mavenPublishing {
+    coordinates(group as String, moduleArtifactId, "0.1.0")
 }
