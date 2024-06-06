@@ -11,6 +11,9 @@ on:
 jobs:
   build:
     runs-on: macos-latest
+    strategy:
+      matrix:
+        solana: ["1.18.14"]
 
     steps:
       - name: Checkout
@@ -26,11 +29,16 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
+      - name: Install Solana
+        uses: ./.github/actions/install-solana
+        with:
+          solana_version: ${{ matrix.solana }}
+
       # Build
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
       - name: Test
-        run: ./gradlew build
+        run: ./gradlew build -PlocalValidator=true
 
       - name: Save Test Reports
         if: failure()
