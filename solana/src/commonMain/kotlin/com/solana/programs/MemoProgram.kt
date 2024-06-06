@@ -7,12 +7,12 @@ import kotlin.jvm.JvmStatic
 
 object MemoProgram {
     @JvmStatic
-    val PROGRAM_ID = SolanaPublicKey.from("Memo1UhkJRfHyvLMcVucJwxXeuD728EqVDDwQDxFMNo")
+    val PROGRAM_ID = SolanaPublicKey.from("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr")
 
     @JvmStatic
     fun publishMemo(account: SolanaPublicKey, memo: String): TransactionInstruction =
         TransactionInstruction(PROGRAM_ID,
-            listOf(AccountMeta(account, true, false)),
+            listOf(AccountMeta(account, true, true)),
             memo.encodeToByteArray()
         )
 }
