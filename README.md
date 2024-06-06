@@ -1,6 +1,10 @@
 # Web3 Core
 Multiplatform Web3 Library
 
+[![badge-latest-release]][url-latest-release]
+[![badge-license]][url-license]
+[![badge-kotlin]][url-kotlin]
+
 ## ⚠️ Experimental
 This library is still under development. The library is functional and being used downstream by the likes of [SolanaKMP](https://github.com/metaplex-foundation/solana-kmp). Breaking changes ~~may~~ will be added leading up to a v1.0 API. You have been warned. 
 
@@ -82,5 +86,13 @@ val rpcRequest = SendTransactionRequest(encodedTransaction, requestId)
 val rpcResponse = rpcDriver.makeRequest(rpcRequest, JsonElement.serializer())
 ```
 
+<!-- TAG_VERSION -->
+[badge-latest-release]: https://img.shields.io/badge/latest--release-0.2.3-blue.svg?style=flat
+[badge-license]: https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg?style=flat
 
+<!-- TAG_DEPENDENCIES -->
+[badge-kotlin]: https://img.shields.io/badge/kotlin-1.9.21-blue.svg?logo=kotlin
 
+[url-latest-release]: https://github.com/solana-mobile/web3-core/releases/latest
+[url-license]: https://www.apache.org/licenses/LICENSE-2.0.txt
+[url-kotlin]: https://kotlinlang.org
