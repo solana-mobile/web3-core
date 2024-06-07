@@ -1,5 +1,6 @@
 [versions]
-kotlinxCoroutines= "1.7.3"
+kotlinxCoroutines = "1.7.3"
+ktor = "2.3.11"
 
 # Plugin versions
 androidGradlePlugin = "8.0.2"
@@ -8,11 +9,14 @@ kotlinSerialization = "1.6.2"
 vanniktechMavenPublish = "0.25.3"
 
 [libraries]
+borsh = { group = "io.github.funkatronics", name = "kborsh", version = "0.1.0" }
 crypto = { group = "com.diglol.crypto", name = "crypto", version = "0.1.5" }
 kotlin-test = { group = "org.jetbrains.kotlin", name = "kotlin-test" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinSerialization" }
 #kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "kotlinxCoroutines" }
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "kotlinxCoroutines" }
+ktor-client-core = { group = "io.ktor", name = "ktor-client-core", version.ref = "ktor" }
+ktor-client-cio = { group = "io.ktor", name = "ktor-client-cio", version.ref = "ktor" }
 multimult = { group = "io.github.funkatronics", name = "multimult", version = "0.2.1" }
 rpc-core = { group = "com.solanamobile", name = "rpc-core", version = "0.2.5" }
 
