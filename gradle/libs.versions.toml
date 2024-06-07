@@ -1,6 +1,7 @@
 [versions]
 kotlinxCoroutines = "1.7.3"
 ktor = "2.3.11"
+rpcCore = "0.2.6"
 
 # Plugin versions
 androidGradlePlugin = "8.0.2"
@@ -18,7 +19,9 @@ kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-cor
 ktor-client-core = { group = "io.ktor", name = "ktor-client-core", version.ref = "ktor" }
 ktor-client-cio = { group = "io.ktor", name = "ktor-client-cio", version.ref = "ktor" }
 multimult = { group = "io.github.funkatronics", name = "multimult", version = "0.2.1" }
-rpc-core = { group = "com.solanamobile", name = "rpc-core", version = "0.2.5" }
+rpc-core = { group = "com.solanamobile", name = "rpc-core", version.ref = "rpcCore" }
+rpc-ktordriver = { group = "com.solanamobile", name = "rpc-ktordriver", version.ref = "rpcCore" }
+rpc-solana = { group = "com.solanamobile", name = "rpc-solana", version.ref = "rpcCore" }
 
 [plugins]
 android-library = { id = "com.android.library", version.ref = "androidGradlePlugin" }

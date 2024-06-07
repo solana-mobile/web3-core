@@ -1,10 +1,11 @@
 package com.solana.programs
 
 import com.solana.config.TestConfig
+import com.solana.networking.KtorNetworkDriver
 import com.solana.publickey.SolanaPublicKey
+import com.solana.rpc.SolanaRpcClient
 import com.solana.transaction.Message
 import com.solana.transaction.Transaction
-import com.solana.util.RpcClient
 import diglol.crypto.Ed25519
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -18,7 +19,7 @@ class MemoProgramTests {
         // given
         val keyPair = Ed25519.generateKeyPair()
         val pubkey = SolanaPublicKey(keyPair.publicKey)
-        val rpc = RpcClient(TestConfig.RPC_URL)
+        val rpc = SolanaRpcClient(TestConfig.RPC_URL, KtorNetworkDriver())
         val message = "hello solana!"
 
         // when
@@ -33,7 +34,7 @@ class MemoProgramTests {
                 Transaction(listOf(sig), this)
             }
 
-        val response = rpc.sendTransaction(transaction)
+        val response = rpc.sendTransaction(transaction, true)
 
         // then
         assertNull(airdropResponse.error)
