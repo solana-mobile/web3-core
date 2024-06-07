@@ -44,7 +44,7 @@ jobs:
         run: ./gradlew build -PlocalValidator=true
 
       - name: Stop local validator
-        run: kill %1
+        run: jobs -l
 
       - name: Save Test Reports
         if: failure()
