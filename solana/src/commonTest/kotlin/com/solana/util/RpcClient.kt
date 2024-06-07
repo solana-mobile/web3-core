@@ -11,9 +11,14 @@ import io.ktor.client.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import io.ktor.util.date.*
 import io.ktor.utils.io.core.*
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.builtins.nullable
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
@@ -42,6 +47,38 @@ class RpcClient(val rpcDriver: Rpc20Driver) {
 
     suspend fun sendTransaction(transaction: Transaction) =
         rpcDriver.makeRequest(SendTransactionRequest(transaction), String.serializer())
+
+    suspend fun sendAndConfirmTransaction(transaction: Transaction) =
+        sendTransaction(transaction).apply {
+            result?.let { confirmTransaction(it) }
+        }
+
+    suspend fun getSignatureStatuses(signatures: List<String>) =
+        rpcDriver.makeRequest(SignatureStatusesRequest(signatures),
+            SolanaResponseSerializer(ListSerializer(SignatureStatus.serializer().nullable)))
+
+    suspend fun confirmTransaction(
+        signature: String,
+        commitment: String = "confirmed",
+        timeout: Long = 15000
+    ): Result<String> = withTimeout(timeout) {
+        suspend fun getStatus() =
+            getSignatureStatuses(listOf(signature))
+                .result?.first()
+
+        // wait for desired transaction status
+        while(getStatus()?.confirmationStatus != commitment) {
+
+            // wait a bit before retrying
+            val millis = getTimeMillis()
+            var inc = 0
+            while(getTimeMillis() - millis < 300 && isActive) { inc++ }
+
+            if (!isActive) break // breakout after timeout
+        }
+
+        Result.success(signature)
+    }
 
     class SolanaResponseSerializer<R>(dataSerializer: KSerializer<R>)
         : KSerializer<R?> {
@@ -126,7 +163,7 @@ class RpcClient(val rpcDriver: Rpc20Driver) {
 
     class SignatureStatusesRequest(transactionIds: List<String>, searchTransactionHistory: Boolean = false, requestId: String = "1")
         : JsonRpc20Request(
-            method = "sendTransaction",
+            method = "getSignatureStatuses",
             params = buildJsonArray {
                 addJsonArray { transactionIds.forEach { add(it) } }
                 addJsonObject {
@@ -135,6 +172,14 @@ class RpcClient(val rpcDriver: Rpc20Driver) {
             },
             requestId
         )
+
+    @Serializable
+    data class SignatureStatus(
+        val slot: Long,
+        val confirmations: Long?,
+        var err: JsonObject?,
+        var confirmationStatus: String?
+    )
 
     class RentExemptBalanceRequest(size: Long, commitment: String? = null, requestId: String = "1")
         : JsonRpc20Request(

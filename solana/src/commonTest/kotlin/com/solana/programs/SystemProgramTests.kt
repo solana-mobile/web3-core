@@ -6,9 +6,11 @@ import com.solana.transaction.Message
 import com.solana.transaction.Transaction
 import com.solana.util.RpcClient
 import diglol.crypto.Ed25519
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withContext
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -46,11 +48,8 @@ class SystemProgramTests {
                 Transaction(listOf(payerSig, newAccountSig), this)
             }
 
-        rpc.sendTransaction(transaction)
-
-        // TODO: add transaction confirmation
-        runBlocking {
-            delay(300)
+        withContext(Dispatchers.Default.limitedParallelism(1)) {
+            rpc.sendAndConfirmTransaction(transaction)
         }
 
         val response = rpc.getBalance(newAccountPubkey)
@@ -85,11 +84,8 @@ class SystemProgramTests {
                 Transaction(listOf(sig), this)
             }
 
-        rpc.sendTransaction(transaction)
-
-        // TODO: add transaction confirmation
-        runBlocking {
-            delay(300)
+        withContext(Dispatchers.Default.limitedParallelism(1)) {
+            rpc.sendAndConfirmTransaction(transaction)
         }
 
         val response = rpc.getBalance(receiverPubkey)
