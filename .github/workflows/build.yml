@@ -43,6 +43,9 @@ jobs:
       - name: Test
         run: ./gradlew build -PlocalValidator=true
 
+      - name: Stop local validator
+        run: kill %1
+
       - name: Save Test Reports
         if: failure()
         uses: actions/upload-artifact@v3
