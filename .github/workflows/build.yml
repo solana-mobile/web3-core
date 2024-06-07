@@ -34,7 +34,7 @@ jobs:
         with:
           solana_version: ${{ matrix.solana }}
 
-      - name: Start local validator using Amman
+      - name: Start local validator
         run: solana-test-validator
 
       # Build
