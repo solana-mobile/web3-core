@@ -17,7 +17,7 @@ kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "kotlinxCoroutines" }
 ktor-client-core = { group = "io.ktor", name = "ktor-client-core", version.ref = "ktor" }
 ktor-client-cio = { group = "io.ktor", name = "ktor-client-cio", version.ref = "ktor" }
-multimult = { group = "io.github.funkatronics", name = "multimult", version = "0.2.1" }
+multimult = { group = "io.github.funkatronics", name = "multimult", version = "0.2.2" }
 rpc-core = { group = "com.solanamobile", name = "rpc-core", version = "0.2.5" }
 
 [plugins]
