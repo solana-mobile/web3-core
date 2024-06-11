@@ -6,6 +6,8 @@ plugins {
 
 val artifactIdPrefix: String by project
 val moduleArtifactId = "$artifactIdPrefix-solana"
+val buildDir = layout.buildDirectory.asFile.get()
+val generatedDir = "${buildDir}/generated/src/commonTest/kotlin"
 
 kotlin {
     jvmToolchain(11)
@@ -36,7 +38,7 @@ kotlin {
             }
         }
         val commonTest by getting {
-            kotlin.srcDir(File("${buildDir}/generated/src/commonTest/kotlin"))
+            kotlin.srcDir(File(generatedDir))
             dependencies {
                 implementation(libs.kotlin.test)
                 implementation(libs.kotlinx.coroutines.test)
@@ -63,7 +65,7 @@ afterEvaluate {
     val localRpcUrl = project.properties["testing.rpc.localUrl"]
     if (useLocalValidator && localRpcUrl != null) rpcUrl = localRpcUrl
 
-    val dir = "${buildDir}/generated/src/commonTest/kotlin/com/solana/config"
+    val dir = "${generatedDir}/com/solana/config"
     mkdir(dir)
     File(dir, "TestConfig.kt").writeText(
         """
