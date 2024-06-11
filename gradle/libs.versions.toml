@@ -27,7 +27,7 @@ ktor-client-core = { group = "io.ktor", name = "ktor-client-core", version.ref =
 ktor-client-cio = { group = "io.ktor", name = "ktor-client-cio", version.ref = "ktor" }
 mockito-inline = { module = "org.mockito:mockito-inline", version.ref = "mockitoInline" }
 mockito-kotlin = { module = "org.mockito.kotlin:mockito-kotlin", version.ref = "mockitoKotlin" }
-multimult = { group = "io.github.funkatronics", name = "multimult", version = "0.2.1" }
+multimult = { group = "io.github.funkatronics", name = "multimult", version = "0.2.2" }
 mwa-clientlib-ktx = { module = "com.solanamobile:mobile-wallet-adapter-clientlib-ktx", version.ref = "mobileWalletAdapter" }
 mwa-walletlib = { module = "com.solanamobile:mobile-wallet-adapter-walletlib", version.ref = "mobileWalletAdapter" }
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
