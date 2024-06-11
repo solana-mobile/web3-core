@@ -1,7 +1,7 @@
 [versions]
 kotlinxCoroutines = "1.7.3"
 ktor = "2.3.11"
-rpcCore = "0.2.6"
+rpcCore = "0.2.7"
 
 # Plugin versions
 androidGradlePlugin = "8.0.2"
