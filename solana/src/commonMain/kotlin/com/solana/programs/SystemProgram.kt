@@ -5,8 +5,12 @@ import com.solana.publickey.SolanaPublicKey
 import com.solana.transaction.AccountMeta
 import com.solana.transaction.TransactionInstruction
 import kotlinx.serialization.builtins.ByteArraySerializer
+import kotlin.experimental.ExperimentalObjCName
 import kotlin.jvm.JvmStatic
+import kotlin.native.ObjCName
 
+@OptIn(ExperimentalObjCName::class)
+@ObjCName("SystemProgram")
 object SystemProgram {
     @JvmStatic
     val PROGRAM_ID = SolanaPublicKey.from("11111111111111111111111111111111")
