@@ -4,6 +4,7 @@ import com.solana.config.TestConfig
 import com.solana.networking.KtorNetworkDriver
 import com.solana.publickey.SolanaPublicKey
 import com.solana.rpc.SolanaRpcClient
+import com.solana.rpc.TransactionOptions
 import com.solana.transaction.Message
 import com.solana.transaction.Transaction
 import diglol.crypto.Ed25519
@@ -34,7 +35,7 @@ class MemoProgramTests {
                 Transaction(listOf(sig), this)
             }
 
-        val response = rpc.sendTransaction(transaction, true)
+        val response = rpc.sendTransaction(transaction, TransactionOptions(skipPreflight = true))
 
         // then
         assertNull(airdropResponse.error)

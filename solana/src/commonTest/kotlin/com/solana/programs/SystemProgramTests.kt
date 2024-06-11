@@ -50,9 +50,10 @@ class SystemProgramTests {
             }
 
         withContext(Dispatchers.Default.limitedParallelism(1)) {
-            rpc.sendTransaction(transaction, true).apply {
-                result?.let { rpc.confirmTransaction(it, TransactionOptions(Commitment.CONFIRMED)) }
-            }
+            rpc.sendAndConfirmTransaction(transaction, TransactionOptions(
+                commitment = Commitment.CONFIRMED,
+                skipPreflight = true
+            ))
         }
 
         val response = rpc.getBalance(newAccountPubkey)
@@ -88,9 +89,10 @@ class SystemProgramTests {
             }
 
         withContext(Dispatchers.Default.limitedParallelism(1)) {
-            rpc.sendTransaction(transaction, true).apply {
-                result?.let { rpc.confirmTransaction(it, TransactionOptions(Commitment.CONFIRMED)) }
-            }
+            rpc.sendAndConfirmTransaction(transaction, TransactionOptions(
+                commitment = Commitment.CONFIRMED,
+                skipPreflight = true
+            ))
         }
 
         val response = rpc.getBalance(receiverPubkey)
