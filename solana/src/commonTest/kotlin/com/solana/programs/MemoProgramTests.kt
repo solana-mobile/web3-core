@@ -2,7 +2,6 @@ package com.solana.programs
 
 import com.solana.config.TestConfig
 import com.solana.networking.KtorNetworkDriver
-import com.solana.programs.MemoProgram.publishMemo
 import com.solana.publickey.SolanaPublicKey
 import com.solana.rpc.SolanaRpcClient
 import com.solana.rpc.TransactionOptions
@@ -30,7 +29,7 @@ class MemoProgramTests {
 
         val transaction = Message.Builder()
             .setRecentBlockhash(blockhashResponse.result!!.blockhash)
-            .addInstruction(publishMemo(pubkey, message))
+            .addInstruction(MemoProgram.publishMemo(pubkey, message))
             .build().run {
                 val sig = Ed25519.sign(keyPair, serialize())
                 Transaction(listOf(sig), this)
