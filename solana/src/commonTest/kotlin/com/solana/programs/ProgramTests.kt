@@ -1,6 +1,5 @@
 package com.solana.programs
 
-
 import com.solana.publickey.SolanaPublicKey
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -18,7 +17,7 @@ class ProgramTests {
         }
 
         // when
-        val result = program.createProgramAddress(seeds)
+        val result = program.createDerivedAddress(seeds)
 
         // then
         assertTrue { result.isFailure }
@@ -34,7 +33,7 @@ class ProgramTests {
         }
 
         // when
-        val result = program.createProgramAddress(seeds)
+        val result = program.createDerivedAddress(seeds)
 
         // then
         assertTrue { result.isSuccess }
@@ -52,7 +51,7 @@ class ProgramTests {
         }
 
         // when
-        val result = program.findProgramAddress(seeds)
+        val result = program.findDerivedAddress(seeds)
 
         // then
         assertTrue { result.isSuccess }
@@ -71,7 +70,7 @@ class ProgramTests {
         }
 
         // when
-        val result = program.findProgramAddress(seeds)
+        val result = program.findDerivedAddress(seeds)
 
         // then
         assertTrue { result.isSuccess }

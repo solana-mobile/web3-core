@@ -13,7 +13,7 @@ class ProgramDerivedAddress private constructor(bytes: ByteArray, val nonce: UBy
         suspend fun find(seeds: List<ByteArray>, programId: PublicKey): Result<ProgramDerivedAddress> {
             for (bump in 255 downTo 0) {
                 println(bump)
-                val result = Program.createProgramAddress(seeds + byteArrayOf(bump.toByte()), programId)
+                val result = Program.createDerivedAddress(seeds + byteArrayOf(bump.toByte()), programId)
                 if (result.isSuccess) return result.map { ProgramDerivedAddress(it, bump.toUByte()) }
             }
             return Result.failure(Error("Unable to find valid derived address for provided seeds"))
