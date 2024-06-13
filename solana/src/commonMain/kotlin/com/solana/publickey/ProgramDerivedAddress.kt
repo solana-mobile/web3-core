@@ -12,7 +12,6 @@ class ProgramDerivedAddress private constructor(bytes: ByteArray, val nonce: UBy
         @JvmStatic
         suspend fun find(seeds: List<ByteArray>, programId: PublicKey): Result<ProgramDerivedAddress> {
             for (bump in 255 downTo 0) {
-                println(bump)
                 val result = Program.createDerivedAddress(seeds + byteArrayOf(bump.toByte()), programId)
                 if (result.isSuccess) return result.map { ProgramDerivedAddress(it, bump.toUByte()) }
             }
