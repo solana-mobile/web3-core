@@ -9,7 +9,7 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 
 @Serializable(with=SolanaPublicKeySerializer::class)
-open class SolanaPublicKey(override val bytes: ByteArray) : PublicKey {
+open class SolanaPublicKey(final override val bytes: ByteArray) : PublicKey {
 
     init {
         require(bytes.size == PUBLIC_KEY_LENGTH) { "Invalid public key length: ${bytes.size}" }
@@ -28,6 +28,10 @@ open class SolanaPublicKey(override val bytes: ByteArray) : PublicKey {
     override fun equals(other: Any?): Boolean {
         return (other is PublicKey) && this.bytes.contentEquals(other.bytes)
     }
+
+    override fun hashCode(): Int = bytes.contentHashCode()
+
+    override fun toString() = base58()
 }
 
 object SolanaPublicKeySerializer : KSerializer<SolanaPublicKey> {

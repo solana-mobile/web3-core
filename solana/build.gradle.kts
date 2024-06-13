@@ -33,6 +33,7 @@ kotlin {
                 implementation(libs.kotlinx.serialization.json)
                 implementation(libs.borsh)
                 implementation(libs.multimult)
+                implementation(libs.salkt)
             }
         }
         val commonTest by getting {
