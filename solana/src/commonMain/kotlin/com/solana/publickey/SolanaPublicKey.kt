@@ -4,6 +4,8 @@ import com.funkatronics.encoders.Base58
 import com.funkatronics.kborsh.BorshDecoder
 import com.funkatronics.kborsh.BorshEncoder
 import com.solana.serialization.ByteStringSerializer
+import com.solana.serialization.TransactionDecoder
+import com.solana.serialization.TransactionEncoder
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.serializer
@@ -11,6 +13,7 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.JsonDecoder
 
 @Serializable(with=SolanaPublicKeySerializer::class)
 open class SolanaPublicKey(final override val bytes: ByteArray) : PublicKey {
@@ -44,11 +47,30 @@ object SolanaPublicKeySerializer : KSerializer<SolanaPublicKey> {
     override val descriptor: SerialDescriptor = buildClassSerialDescriptor("SolanaPublicKey")
 
     override fun deserialize(decoder: Decoder): SolanaPublicKey =
-        if (decoder is BorshDecoder) SolanaPublicKey(decoder.decodeSerializableValue(borshDelegate))
-        else SolanaPublicKey.from(decoder.decodeSerializableValue(jsonDelegate))
+        when (decoder) {
+            is BorshDecoder, is TransactionDecoder ->
+                SolanaPublicKey(decoder.decodeSerializableValue(borshDelegate))
+            is JsonDecoder ->
+                SolanaPublicKey.from(decoder.decodeSerializableValue(jsonDelegate))
+            else ->
+                runCatching {
+                    SolanaPublicKey.from(decoder.decodeSerializableValue(jsonDelegate))
+                }.getOrElse {
+                    SolanaPublicKey(decoder.decodeSerializableValue(borshDelegate))
+                }
+        }
 
-    override fun serialize(encoder: Encoder, value: SolanaPublicKey) {
-        if (encoder is BorshEncoder) encoder.encodeSerializableValue(borshDelegate, value.bytes)
-        else encoder.encodeSerializableValue(jsonDelegate, value.base58())
-    }
+    override fun serialize(encoder: Encoder, value: SolanaPublicKey) =
+        when (encoder) {
+            is BorshEncoder, is TransactionEncoder ->
+                encoder.encodeSerializableValue(borshDelegate, value.bytes)
+            is JsonDecoder ->
+                encoder.encodeSerializableValue(jsonDelegate, value.base58())
+            else ->
+                runCatching {
+                    encoder.encodeSerializableValue(jsonDelegate, value.base58())
+                }.getOrElse {
+                    encoder.encodeSerializableValue(borshDelegate, value.bytes)
+                }
+        }
 }

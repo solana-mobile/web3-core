@@ -39,10 +39,10 @@ class SolanaPublicKeySerializerTests {
         """.trimIndent()
 
         // when
-        val deserialzed = Json.decodeFromString<TestStruct>(json)
+        val deserialized = Json.decodeFromString<TestStruct>(json)
 
         // then
-        assertEquals(publicKey, deserialzed.owner)
+        assertEquals(publicKey, deserialized.owner)
     }
 
     @Test
@@ -65,9 +65,35 @@ class SolanaPublicKeySerializerTests {
         val publicKey = SolanaPublicKey.from(publicKeyBase58)
 
         // when
-        val deserialzed = Borsh.decodeFromByteArray(SolanaPublicKeySerializer, publicKey.bytes)
+        val deserialized = Borsh.decodeFromByteArray(SolanaPublicKeySerializer, publicKey.bytes)
 
         // then
-        assertEquals(publicKey, deserialzed)
+        assertEquals(publicKey, deserialized)
+    }
+
+    @Test
+    fun `Transaction encoder encodes public key bytes`() {
+        // given
+        val publicKeyBase58 = "11111111111111111111111111111111"
+        val publicKey = SolanaPublicKey.from(publicKeyBase58)
+
+        // when
+        val serialized = TransactionFormat.encodeToByteArray(SolanaPublicKeySerializer, publicKey)
+
+        // then
+        assertContentEquals(publicKey.bytes, serialized)
+    }
+
+    @Test
+    fun `Transaction encoder decodes public key bytes`() {
+        // given
+        val publicKeyBase58 = "11111111111111111111111111111111"
+        val publicKey = SolanaPublicKey.from(publicKeyBase58)
+
+        // when
+        val deserialized = TransactionFormat.decodeFromByteArray(SolanaPublicKeySerializer, publicKey.bytes)
+
+        // then
+        assertEquals(publicKey, deserialized)
     }
 }
