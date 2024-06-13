@@ -19,6 +19,7 @@ ktor-client-core = { group = "io.ktor", name = "ktor-client-core", version.ref =
 ktor-client-cio = { group = "io.ktor", name = "ktor-client-cio", version.ref = "ktor" }
 multimult = { group = "io.github.funkatronics", name = "multimult", version = "0.2.3" }
 rpc-core = { group = "com.solanamobile", name = "rpc-core", version = "0.2.5" }
+salkt = { group = "io.github.funkatronics", name = "salkt", version = "0.1.0" }
 
 [plugins]
 android-library = { id = "com.android.library", version.ref = "androidGradlePlugin" }
