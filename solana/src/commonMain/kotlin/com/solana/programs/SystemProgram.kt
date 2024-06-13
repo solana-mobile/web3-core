@@ -7,7 +7,7 @@ import com.solana.transaction.TransactionInstruction
 import kotlinx.serialization.builtins.ByteArraySerializer
 import kotlin.jvm.JvmStatic
 
-object SystemProgram {
+object SystemProgram : Program {
     @JvmStatic
     val PROGRAM_ID = SolanaPublicKey.from("11111111111111111111111111111111")
 
@@ -51,4 +51,6 @@ object SystemProgram {
                 encodeSerializableValue(ByteArraySerializer(), programId.bytes)
             }.borshEncodedBytes
         )
+
+    override val programId = PROGRAM_ID
 }

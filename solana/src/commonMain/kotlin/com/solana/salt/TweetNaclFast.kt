@@ -2461,7 +2461,7 @@ internal object TweetNaclFast {
 
     // public static boolean java.util.Arrays.equals(array1, array2);
     // Check that a pubkey is on the curve.
-    fun is_on_curve(p: ByteArray): Int {
+    fun is_on_curve(p: ByteArray): Boolean {
         val r = arrayOf(LongArray(16), LongArray(16), LongArray(16), LongArray(16))
         val t = LongArray(16)
         val chk = LongArray(16)
@@ -2493,7 +2493,8 @@ internal object TweetNaclFast {
         )
         S(chk, r[0])
         M(chk, chk, den)
-        return if (neq25519(chk, num) != 0) 0 else 1
+//        return if (neq25519(chk, num) != 0) 0 else 1
+        return neq25519(chk, num) == 0
     }
 
     /*
