@@ -1,10 +1,10 @@
 package com.solana.programs
 
 import com.funkatronics.hash.Sha256
+import com.funkatronics.salt.isOnCurve
 import com.solana.publickey.ProgramDerivedAddress
 import com.solana.publickey.PublicKey
 import com.solana.publickey.SolanaPublicKey
-import com.solana.salt.TweetNaclFast
 import kotlin.jvm.JvmStatic
 
 interface Program {
@@ -23,19 +23,19 @@ interface Program {
 
         @JvmStatic
         suspend fun createProgramAddress(seeds: List<ByteArray>, programId: PublicKey): Result<SolanaPublicKey> {
-            val publicKeyBytes = Sha256.hash(
+            val address = Sha256.hash(
                 seeds.foldIndexed(ByteArray(0)) { i, a, s ->
                     require(s.size <= 32) { "Seed length must be <= 32 bytes" }; a + s
                 } + programId.bytes + "ProgramDerivedAddress".encodeToByteArray()
             )
 
-            if (TweetNaclFast.is_on_curve(publicKeyBytes)) {
+            if (address.isOnCurve()) {
                 return Result.failure(
                     IllegalArgumentException("Invalid seeds, address must fall off curve")
                 )
             }
 
-            return Result.success(SolanaPublicKey(publicKeyBytes))
+            return Result.success(SolanaPublicKey(address))
         }
     }
 }

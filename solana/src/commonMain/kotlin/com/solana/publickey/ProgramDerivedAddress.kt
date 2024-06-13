@@ -1,11 +1,20 @@
 package com.solana.publickey
 
+import com.funkatronics.salt.isOnCurve
 import com.solana.programs.Program
 import kotlin.jvm.JvmStatic
 
-class ProgramDerivedAddress(bytes: ByteArray, val nonce: UByte) : SolanaPublicKey(bytes) {
+class ProgramDerivedAddress private constructor(bytes: ByteArray, val nonce: UByte) : SolanaPublicKey(bytes) {
 
-    constructor(publicKey: PublicKey, nonce: UByte) : this(publicKey.bytes, nonce)
+    private constructor(publicKey: PublicKey, nonce: UByte) : this(publicKey.bytes, nonce)
+
+    suspend fun ProgramDerivedAddress(bytes: ByteArray, nonce: UByte) {
+        require(!bytes.isOnCurve()) { "Provided public key is not a PDA, address must be off Ed25519 curve" }
+        return ProgramDerivedAddress(bytes, nonce)
+    }
+
+    suspend fun ProgramDerivedAddress(publicKey: PublicKey, nonce: UByte) =
+        ProgramDerivedAddress(publicKey.bytes, nonce)
 
     companion object {
         @JvmStatic
