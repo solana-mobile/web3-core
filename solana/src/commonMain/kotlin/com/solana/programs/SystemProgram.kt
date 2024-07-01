@@ -55,4 +55,6 @@ object SystemProgram {
                 encodeSerializableValue(ByteArraySerializer(), programId.bytes)
             }.borshEncodedBytes
         )
+
+    override val programId = PROGRAM_ID
 }

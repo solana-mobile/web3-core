@@ -19,4 +19,6 @@ object MemoProgram {
             listOf(AccountMeta(account, true, true)),
             memo.encodeToByteArray()
         )
+
+    override val programId = PROGRAM_ID
 }

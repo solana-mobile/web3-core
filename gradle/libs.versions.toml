@@ -18,10 +18,11 @@ kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "kotlinxCoroutines" }
 ktor-client-core = { group = "io.ktor", name = "ktor-client-core", version.ref = "ktor" }
 ktor-client-cio = { group = "io.ktor", name = "ktor-client-cio", version.ref = "ktor" }
-multimult = { group = "io.github.funkatronics", name = "multimult", version = "0.2.2" }
+multimult = { group = "io.github.funkatronics", name = "multimult", version = "0.2.3" }
 rpc-core = { group = "com.solanamobile", name = "rpc-core", version.ref = "rpcCore" }
 rpc-ktordriver = { group = "com.solanamobile", name = "rpc-ktordriver", version.ref = "rpcCore" }
 rpc-solana = { group = "com.solanamobile", name = "rpc-solana", version.ref = "rpcCore" }
+salkt = { group = "io.github.funkatronics", name = "salkt", version = "0.1.0" }
 
 [plugins]
 android-library = { id = "com.android.library", version.ref = "androidGradlePlugin" }
