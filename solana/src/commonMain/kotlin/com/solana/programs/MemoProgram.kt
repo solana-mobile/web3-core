@@ -3,9 +3,13 @@ package com.solana.programs
 import com.solana.publickey.SolanaPublicKey
 import com.solana.transaction.AccountMeta
 import com.solana.transaction.TransactionInstruction
+import kotlin.experimental.ExperimentalObjCName
 import kotlin.jvm.JvmStatic
+import kotlin.native.ObjCName
 
-object MemoProgram : Program {
+@OptIn(ExperimentalObjCName::class)
+@ObjCName("MemoProgram")
+object MemoProgram {
     @JvmStatic
     val PROGRAM_ID = SolanaPublicKey.from("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr")
 
