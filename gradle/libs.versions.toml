@@ -5,7 +5,7 @@ rpcCore = "0.2.7"
 
 # Plugin versions
 androidGradlePlugin = "8.0.2"
-kotlin = "2.0.0"
+kotlin = "2.0.20-Beta1"
 kotlinSerialization = "1.6.2"
 vanniktechMavenPublish = "0.25.3"
 
