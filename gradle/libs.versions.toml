@@ -1,28 +1,33 @@
 [versions]
-kotlinxCoroutines = "1.7.3"
+kotlinxCoroutines = "1.10.2"
 ktor = "2.3.11"
-rpcCore = "0.2.7"
+
+crypto = "0.1.5"
+kborsh = "0.1.1"
+multimult = "0.2.4"
+rpcCore = "0.2.8"
+salkt = "0.1.0"
 
 # Plugin versions
-androidGradlePlugin = "8.0.2"
-kotlin = "2.0.20-Beta2"
-kotlinSerialization = "1.6.2"
-vanniktechMavenPublish = "0.25.3"
+androidGradlePlugin = "8.10.1"
+kotlin = "2.1.10"
+kotlinSerialization = "1.8.1"
+vanniktechMavenPublish = "0.32.0"
 
 [libraries]
-borsh = { group = "io.github.funkatronics", name = "kborsh", version = "0.1.0" }
-crypto = { group = "com.diglol.crypto", name = "crypto", version = "0.1.5" }
+borsh = { group = "io.github.funkatronics", name = "kborsh", version.ref = "kborsh" }
+crypto = { group = "com.diglol.crypto", name = "crypto", version.ref = "crypto" }
 kotlin-test = { group = "org.jetbrains.kotlin", name = "kotlin-test" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinSerialization" }
 #kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "kotlinxCoroutines" }
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "kotlinxCoroutines" }
 ktor-client-core = { group = "io.ktor", name = "ktor-client-core", version.ref = "ktor" }
 ktor-client-cio = { group = "io.ktor", name = "ktor-client-cio", version.ref = "ktor" }
-multimult = { group = "io.github.funkatronics", name = "multimult", version = "0.2.3" }
+multimult = { group = "io.github.funkatronics", name = "multimult", version.ref = "multimult" }
 rpc-core = { group = "com.solanamobile", name = "rpc-core", version.ref = "rpcCore" }
 rpc-ktordriver = { group = "com.solanamobile", name = "rpc-ktordriver", version.ref = "rpcCore" }
 rpc-solana = { group = "com.solanamobile", name = "rpc-solana", version.ref = "rpcCore" }
-salkt = { group = "io.github.funkatronics", name = "salkt", version = "0.1.0" }
+salkt = { group = "io.github.funkatronics", name = "salkt", version.ref = "salkt" }
 
 [plugins]
 android-library = { id = "com.android.library", version.ref = "androidGradlePlugin" }
