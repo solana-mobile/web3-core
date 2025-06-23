@@ -9,7 +9,7 @@ import kotlin.native.ObjCName
 
 @OptIn(ExperimentalObjCName::class)
 @ObjCName("MemoProgram")
-object MemoProgram {
+object MemoProgram : Program {
     @JvmStatic
     val PROGRAM_ID = SolanaPublicKey.from("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr")
 

@@ -11,7 +11,7 @@ import kotlin.native.ObjCName
 
 @OptIn(ExperimentalObjCName::class)
 @ObjCName("SystemProgram")
-object SystemProgram {
+object SystemProgram : Program {
     @JvmStatic
     val PROGRAM_ID = SolanaPublicKey.from("11111111111111111111111111111111")
 
