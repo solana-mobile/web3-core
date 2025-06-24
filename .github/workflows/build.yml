@@ -41,7 +41,9 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
       - name: Test
-        run: ./gradlew build -PlocalValidator=true
+        run: |
+          ./gradlew :core:dependencyInsight --configuration iosArm64CompileClasspath --dependency com.solanamobile
+          ./gradlew build -PlocalValidator=true
 
       - name: Save Test Reports
         if: failure()
