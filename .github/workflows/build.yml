@@ -41,7 +41,7 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
       - name: Test
-        run: ./gradlew build -PlocalValidator=true -Xklib-duplicated-unique-name-strategy=allow-all-with-warning
+        run: ./gradlew build -PlocalValidator=true
 
       - name: Save Test Reports
         if: failure()
