@@ -1,22 +1,27 @@
 [versions]
 androidxActivityKtx = "1.9.0"
-diglolCrypto="0.1.5"
-kotlinxCoroutines= "1.7.3"
+kotlinxCoroutines= "1.10.2"
 ktor = "2.3.11"
-mobileWalletAdapter="2.0.2"
 mockitoInline = "5.2.0"
 mockitoKotlin = "4.1.0"
 robolectric = "4.12.2"
 
+diglolCrypto = "0.1.5"
+kborsh = "0.1.1"
+mobileWalletAdapter="2.0.8"
+multimult = "0.2.4"
+rpcCore = "0.2.8"
+salkt = "0.1.0"
+
 # Plugin versions
-androidGradlePlugin = "8.0.2"
-kotlin = "1.9.21"
-kotlinSerialization = "1.6.2"
-vanniktechMavenPublish = "0.25.3"
+androidGradlePlugin = "8.2.0"
+kotlin = "2.1.10"
+kotlinSerialization = "1.8.1"
+vanniktechMavenPublish = "0.32.0"
 
 [libraries]
 androidx-activity-ktx = { module = "androidx.activity:activity-ktx", version.ref = "androidxActivityKtx" }
-borsh = { group = "io.github.funkatronics", name = "kborsh", version = "0.1.0" }
+borsh = { group = "io.github.funkatronics", name = "kborsh", version.ref = "kborsh" }
 crypto = { group = "com.diglol.crypto", name = "crypto", version.ref = "diglolCrypto" }
 pkc = { group = "com.diglol.crypto", name = "pkc", version.ref = "diglolCrypto" }
 kotlin-test = { group = "org.jetbrains.kotlin", name = "kotlin-test" }
@@ -27,12 +32,12 @@ ktor-client-core = { group = "io.ktor", name = "ktor-client-core", version.ref =
 ktor-client-cio = { group = "io.ktor", name = "ktor-client-cio", version.ref = "ktor" }
 mockito-inline = { module = "org.mockito:mockito-inline", version.ref = "mockitoInline" }
 mockito-kotlin = { module = "org.mockito.kotlin:mockito-kotlin", version.ref = "mockitoKotlin" }
-multimult = { group = "io.github.funkatronics", name = "multimult", version = "0.2.3" }
+multimult = { group = "io.github.funkatronics", name = "multimult", version.ref = "multimult" }
 mwa-clientlib-ktx = { module = "com.solanamobile:mobile-wallet-adapter-clientlib-ktx", version.ref = "mobileWalletAdapter" }
 mwa-walletlib = { module = "com.solanamobile:mobile-wallet-adapter-walletlib", version.ref = "mobileWalletAdapter" }
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
-rpc-core = { group = "com.solanamobile", name = "rpc-core", version = "0.2.5" }
-salkt = { group = "io.github.funkatronics", name = "salkt", version = "0.1.0" }
+rpc-core = { group = "com.solanamobile", name = "rpc-core", version.ref = "rpcCore" }
+salkt = { group = "io.github.funkatronics", name = "salkt", version.ref = "salkt" }
 
 [plugins]
 android-library = { id = "com.android.library", version.ref = "androidGradlePlugin" }
