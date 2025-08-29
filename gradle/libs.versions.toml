@@ -17,7 +17,7 @@ salkt = "0.1.0"
 androidGradlePlugin = "8.2.0"
 kotlin = "2.1.10"
 kotlinSerialization = "1.8.1"
-vanniktechMavenPublish = "0.32.0"
+vanniktechMavenPublish = "0.34.0"
 
 [libraries]
 androidx-activity-ktx = { module = "androidx.activity:activity-ktx", version.ref = "androidxActivityKtx" }
