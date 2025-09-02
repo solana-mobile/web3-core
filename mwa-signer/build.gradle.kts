@@ -51,5 +51,5 @@ dependencies {
 }
 
 mavenPublishing {
-    coordinates(group as String, moduleArtifactId, "0.1.0")
+    coordinates(group as String, moduleArtifactId, version as String)
 }
