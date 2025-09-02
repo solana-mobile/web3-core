@@ -5,7 +5,7 @@ ktor = "2.3.11"
 crypto = "0.1.5"
 kborsh = "0.1.1"
 multimult = "0.2.4"
-rpcCore = "0.2.8"
+rpcCore = "0.2.9"
 salkt = "0.1.0"
 
 # Plugin versions
