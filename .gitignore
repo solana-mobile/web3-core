@@ -23,6 +23,7 @@
 /build
 */build
 /.gradle
+/.kotlin
 
 # IDE Files
 /.idea
