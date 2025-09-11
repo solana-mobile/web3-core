@@ -91,6 +91,6 @@ class AssociatedTokenProgramTests {
         assertNull(accountInfo.error)
         assertNotNull(accountInfo.result)
         assertEquals(TokenProgram.programId, accountInfo.result!!.owner)
-        assertEquals(165, accountInfo.result!!.space)
+        assertEquals(165, accountInfo.result!!.space.toInt())
     }
 }

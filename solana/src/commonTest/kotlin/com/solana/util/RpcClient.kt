@@ -224,10 +224,10 @@ class RpcClient(val rpcDriver: Rpc20Driver) {
     data class AccountInfo(
         val data: JsonElement,
         val executable: Boolean,
-        val lamports: Long,
+        val lamports: ULong,
         val owner: SolanaPublicKey,
-        val rentEpoch: Long,
-        val space: Long
+        val rentEpoch: ULong,
+        val space: ULong
     )
 
     @Serializable

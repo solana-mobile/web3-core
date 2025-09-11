@@ -65,7 +65,7 @@ class TokenProgramTests {
         assertNull(accountInfoResponse.error)
         assertNotNull(accountInfoResponse.result)
         assertEquals(TokenProgram.PROGRAM_ID, accountInfoResponse.result!!.owner)
-        assertEquals(82, accountInfoResponse.result!!.space)
+        assertEquals(82, accountInfoResponse.result!!.space.toInt())
     }
 
     @Test
@@ -152,7 +152,7 @@ class TokenProgramTests {
         assertNull(accountInfoResponse.error)
         assertNotNull(accountInfoResponse.result)
         assertEquals(TokenProgram.PROGRAM_ID, accountInfoResponse.result!!.owner)
-        assertEquals(165, accountInfoResponse.result!!.space)
+        assertEquals(165, accountInfoResponse.result!!.space.toInt())
     }
 
     @Test
@@ -884,7 +884,7 @@ class TokenProgramTests {
             assertNull(error)
             assertNotNull(result)
             assertEquals(TokenProgram.PROGRAM_ID, result!!.owner)
-            assertEquals(165, result!!.space)
+            assertEquals(165, result!!.space.toInt())
         }
 
         // Close Account
