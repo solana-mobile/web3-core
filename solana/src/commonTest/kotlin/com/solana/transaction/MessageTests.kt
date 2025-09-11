@@ -60,7 +60,7 @@ class MessageTests {
             byteArrayOf(
                 0x01.toByte(), // 1 signature required (fee payer)
                 0x00.toByte(), // 0 read-only account signatures
-                0x01.toByte(), // 1 read-only account not requiring a signature
+                0x00.toByte(), // 0 read-only account not requiring a signature
                 0x02.toByte(), // 2 accounts
             ) + account.bytes + programId.bytes + blockhash.bytes +
             //endregion

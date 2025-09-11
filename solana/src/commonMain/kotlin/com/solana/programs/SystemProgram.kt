@@ -2,9 +2,9 @@ package com.solana.programs
 
 import com.funkatronics.kborsh.BorshEncoder
 import com.solana.publickey.SolanaPublicKey
+import com.solana.publickey.SolanaPublicKeySerializer
 import com.solana.transaction.AccountMeta
 import com.solana.transaction.TransactionInstruction
-import kotlinx.serialization.builtins.ByteArraySerializer
 import kotlin.jvm.JvmStatic
 
 object SystemProgram : Program {
@@ -48,7 +48,7 @@ object SystemProgram : Program {
                 encodeInt(PROGRAM_INDEX_CREATE_ACCOUNT)
                 encodeLong(lamports)
                 encodeLong(space)
-                encodeSerializableValue(ByteArraySerializer(), programId.bytes)
+                encodeSerializableValue(SolanaPublicKeySerializer, programId)
             }.borshEncodedBytes
         )
 

@@ -1,10 +1,12 @@
 package com.solana.util
 
 import com.funkatronics.encoders.Base58
+import com.funkatronics.encoders.Base64
 import com.solana.networking.HttpNetworkDriver
 import com.solana.networking.HttpRequest
 import com.solana.networking.Rpc20Driver
 import com.solana.publickey.SolanaPublicKey
+import com.solana.publickey.SolanaPublicKeySerializer
 import com.solana.rpccore.JsonRpc20Request
 import com.solana.transaction.Transaction
 import io.ktor.client.*
@@ -44,6 +46,12 @@ class RpcClient(val rpcDriver: Rpc20Driver) {
 
     suspend fun getLatestBlockhash() =
         rpcDriver.makeRequest(LatestBlockhashRequest(), SolanaResponseSerializer(BlockhashResponse.serializer()))
+
+    suspend fun getAccountInfo(address: SolanaPublicKey, commitment: String = "confirmed") =
+        rpcDriver.makeRequest(AccountInfoRequest(address, commitment), SolanaResponseSerializer(AccountInfo.serializer()))
+
+    suspend fun simulateTransaction(transaction: Transaction, commitment: String = "confirmed") =
+        rpcDriver.makeRequest(SimulateTransactionRequest(transaction, commitment), SolanaResponseSerializer(JsonElement.serializer()))
 
     suspend fun sendTransaction(transaction: Transaction) =
         rpcDriver.makeRequest(SendTransactionRequest(transaction), String.serializer())
@@ -194,4 +202,55 @@ class RpcClient(val rpcDriver: Rpc20Driver) {
             },
             requestId
         )
+
+    class AccountInfoRequest(
+        address: SolanaPublicKey,
+        commitment: String = "confirmed",
+        encoding: String = "base64",
+        requestId: String = "1"
+    ): JsonRpc20Request(
+        method = "getAccountInfo",
+        params = buildJsonArray {
+            add(address.base58())
+            addJsonObject {
+                put("commitment", commitment)
+                put("encoding", encoding)
+            }
+        },
+        requestId
+    )
+
+    @Serializable
+    data class AccountInfo(
+        val data: JsonElement,
+        val executable: Boolean,
+        val lamports: ULong,
+        val owner: SolanaPublicKey,
+        val rentEpoch: ULong,
+        val space: ULong
+    )
+
+    @Serializable
+    data class SplTokenAccountInfo(
+        val isNative: Boolean?,
+        val mint: SolanaPublicKey?,
+        val owner: SolanaPublicKey?,
+        val state: SolanaPublicKey?,
+    )
+
+    class SimulateTransactionRequest(
+        transaction: Transaction,
+        commitment: String = "confirmed",
+        requestId: String = "1"
+    ): JsonRpc20Request(
+        method = "simulateTransaction",
+        params = buildJsonArray {
+            add(Base64.encodeToString(transaction.serialize()))
+            addJsonObject {
+                put("commitment", commitment)
+                put("encoding", "base64")
+            }
+        },
+        requestId
+    )
 }
