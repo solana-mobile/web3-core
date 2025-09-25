@@ -1,28 +1,47 @@
 [versions]
-kotlinxCoroutines = "1.7.3"
-ktor = "2.3.11"
+androidxActivityKtx = "1.11.0"
+kotlinxCoroutines= "1.10.2"
+ktor = "3.3.0"
+mockitoInline = "5.2.0"
+mockitoKotlin = "6.0.0"
+robolectric = "4.16"
+
+diglolCrypto = "0.1.5"
+kborsh = "0.1.2"
+mobileWalletAdapter="2.1.0"
+multimult = "0.2.5"
+rpcCore = "0.2.9"
+salkt = "0.1.1"
 
 # Plugin versions
-androidGradlePlugin = "8.0.2"
-kotlin = "1.9.21"
-kotlinSerialization = "1.6.2"
-vanniktechMavenPublish = "0.25.3"
+androidGradlePlugin = "8.2.2"
+kotlin = "2.2.20"
+kotlinSerialization = "1.9.0"
+vanniktechMavenPublish = "0.34.0"
 
 [libraries]
-borsh = { group = "io.github.funkatronics", name = "kborsh", version = "0.1.0" }
-crypto = { group = "com.diglol.crypto", name = "crypto", version = "0.1.5" }
+androidx-activity-ktx = { module = "androidx.activity:activity-ktx", version.ref = "androidxActivityKtx" }
+borsh = { group = "io.github.funkatronics", name = "kborsh", version.ref = "kborsh" }
+crypto = { group = "com.diglol.crypto", name = "crypto", version.ref = "diglolCrypto" }
+pkc = { group = "com.diglol.crypto", name = "pkc", version.ref = "diglolCrypto" }
 kotlin-test = { group = "org.jetbrains.kotlin", name = "kotlin-test" }
-kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinSerialization" }
-#kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "kotlinxCoroutines" }
+kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "kotlinxCoroutines" }
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "kotlinxCoroutines" }
+kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinSerialization" }
 ktor-client-core = { group = "io.ktor", name = "ktor-client-core", version.ref = "ktor" }
 ktor-client-cio = { group = "io.ktor", name = "ktor-client-cio", version.ref = "ktor" }
-multimult = { group = "io.github.funkatronics", name = "multimult", version = "0.2.3" }
-rpc-core = { group = "com.solanamobile", name = "rpc-core", version = "0.2.5" }
-salkt = { group = "io.github.funkatronics", name = "salkt", version = "0.1.0" }
+mockito-inline = { module = "org.mockito:mockito-inline", version.ref = "mockitoInline" }
+mockito-kotlin = { module = "org.mockito.kotlin:mockito-kotlin", version.ref = "mockitoKotlin" }
+multimult = { group = "io.github.funkatronics", name = "multimult", version.ref = "multimult" }
+mwa-clientlib-ktx = { module = "com.solanamobile:mobile-wallet-adapter-clientlib-ktx", version.ref = "mobileWalletAdapter" }
+mwa-walletlib = { module = "com.solanamobile:mobile-wallet-adapter-walletlib", version.ref = "mobileWalletAdapter" }
+robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
+rpc-core = { group = "com.solanamobile", name = "rpc-core", version.ref = "rpcCore" }
+salkt = { group = "io.github.funkatronics", name = "salkt", version.ref = "salkt" }
 
 [plugins]
 android-library = { id = "com.android.library", version.ref = "androidGradlePlugin" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 publish = { id = "com.vanniktech.maven.publish", version.ref = "vanniktechMavenPublish" }
