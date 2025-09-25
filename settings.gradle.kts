@@ -17,4 +17,4 @@ dependencyResolutionManagement {
 rootProject.name = "Web3 Core"
 include(":core")
 include(":solana")
-
+include(":mwa-signer")

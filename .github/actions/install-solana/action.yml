@@ -1,4 +1,5 @@
-name: Install Solana
+name: Install Solana Validator
+description: Install a local solana validator for testing
 
 inputs:
   solana_version:

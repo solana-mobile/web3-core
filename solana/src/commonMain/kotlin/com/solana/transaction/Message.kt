@@ -50,6 +50,7 @@ sealed class Message {
             val readOnlySigners = mutableSetOf<SolanaPublicKey>()
             val writableNonSigners = mutableSetOf<SolanaPublicKey>()
             val readOnlyNonSigners = mutableSetOf<SolanaPublicKey>()
+            val programIds = mutableSetOf<SolanaPublicKey>()
             instructions.forEach { instruction ->
                 instruction.accounts.forEach { account ->
                     if (account.isSigner) {
@@ -60,11 +61,11 @@ sealed class Message {
                         else readOnlyNonSigners.add(account.publicKey)
                     }
                 }
-                readOnlyNonSigners.add(instruction.programId)
+                programIds.add(instruction.programId)
             }
 
             val signers = writableSigners + readOnlySigners
-            val accounts = signers + writableNonSigners + readOnlyNonSigners
+            val accounts = signers + writableNonSigners + readOnlyNonSigners + programIds
             val compiledInstructions = instructions.map { instruction ->
                 Instruction(
                     accounts.indexOf(instruction.programId).toUByte(),

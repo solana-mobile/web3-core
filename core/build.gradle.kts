@@ -11,12 +11,7 @@ val moduleArtifactId = "$artifactIdPrefix-core"
 
 kotlin {
     jvmToolchain(11)
-    jvm {
-        withJava()
-        testRuns["test"].executionTask.configure {
-            useJUnitPlatform()
-        }
-    }
+    jvm()
     listOf(
         iosX64(),
         iosArm64(),
