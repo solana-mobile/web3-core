@@ -1,22 +1,22 @@
 [versions]
-androidxActivityKtx = "1.9.0"
+androidxActivityKtx = "1.11.0"
 kotlinxCoroutines= "1.10.2"
-ktor = "2.3.11"
+ktor = "3.3.0"
 mockitoInline = "5.2.0"
-mockitoKotlin = "4.1.0"
-robolectric = "4.12.2"
+mockitoKotlin = "6.0.0"
+robolectric = "4.16"
 
 diglolCrypto = "0.1.5"
-kborsh = "0.1.1"
-mobileWalletAdapter="2.0.8"
-multimult = "0.2.4"
-rpcCore = "0.2.8"
-salkt = "0.1.0"
+kborsh = "0.1.2"
+mobileWalletAdapter="2.1.0"
+multimult = "0.2.5"
+rpcCore = "0.2.9"
+salkt = "0.1.1"
 
 # Plugin versions
-androidGradlePlugin = "8.2.0"
-kotlin = "2.1.10"
-kotlinSerialization = "1.8.1"
+androidGradlePlugin = "8.2.2"
+kotlin = "2.2.20"
+kotlinSerialization = "1.9.0"
 vanniktechMavenPublish = "0.34.0"
 
 [libraries]
