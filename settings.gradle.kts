@@ -14,6 +14,15 @@ dependencyResolutionManagement {
     }
 }
 
+gradle.beforeProject {
+    configurations.configureEach {
+        resolutionStrategy.dependencySubstitution {
+            substitute(module("com.solanamobile:web3-solana"))
+                .using(project(":solana"))
+        }
+    }
+}
+
 rootProject.name = "Web3 Core"
 include(":core")
 include(":solana")
