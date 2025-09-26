@@ -1,11 +1,14 @@
 package com.solana.programs
 
 import com.solana.config.TestConfig
+import com.solana.networking.KtorNetworkDriver
 import com.solana.publickey.ProgramDerivedAddress
 import com.solana.publickey.SolanaPublicKey
+import com.solana.rpc.Commitment
+import com.solana.rpc.SolanaRpcClient
+import com.solana.rpc.TransactionOptions
 import com.solana.transaction.Message
 import com.solana.transaction.Transaction
-import com.solana.util.RpcClient
 import diglol.crypto.Ed25519
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.runTest
@@ -26,7 +29,7 @@ class AssociatedTokenProgramTests {
         val mintAuthorityPublicKey = SolanaPublicKey(mintAuthority.publicKey)
         val owner = Ed25519.generateKeyPair()
         val ownerPublicKey = SolanaPublicKey(owner.publicKey)
-        val rpc = RpcClient(TestConfig.RPC_URL)
+        val rpc = SolanaRpcClient(TestConfig.RPC_URL, KtorNetworkDriver())
 
         val associatedAccount = SolanaPublicKey(ProgramDerivedAddress.find(
             listOf(ownerPublicKey.bytes, TokenProgram.PROGRAM_ID.bytes, mintPublicKey.bytes),
@@ -61,7 +64,10 @@ class AssociatedTokenProgramTests {
             }
 
         withContext(Dispatchers.Default.limitedParallelism(1)) {
-            rpc.sendAndConfirmTransaction(createAndInitializeMintTransaction)
+            rpc.sendAndConfirmTransaction(createAndInitializeMintTransaction, TransactionOptions(
+                commitment = Commitment.CONFIRMED,
+                skipPreflight = true
+            ))
         }
 
         blockhashResponse = rpc.getLatestBlockhash()
@@ -80,17 +86,20 @@ class AssociatedTokenProgramTests {
             }
 
         withContext(Dispatchers.Default.limitedParallelism(1)) {
-            rpc.sendAndConfirmTransaction(transaction).apply {
-                assertNull(this.error)
-                assertNotNull(this.result)
+            rpc.sendAndConfirmTransaction(transaction, TransactionOptions(
+                commitment = Commitment.CONFIRMED,
+                skipPreflight = true
+            )).apply {
+                assertNull(error)
+                assertNotNull(result)
             }
         }
 
-        val accountInfo = rpc.getAccountInfo(associatedAccount)
+        val accountInfo = rpc.getAccountInfo(associatedAccount, commitment = Commitment.CONFIRMED)
 
         assertNull(accountInfo.error)
         assertNotNull(accountInfo.result)
         assertEquals(TokenProgram.programId, accountInfo.result!!.owner)
-        assertEquals(165, accountInfo.result!!.space.toInt())
+        assertEquals(165, accountInfo.result!!.space!!.toInt())
     }
 }

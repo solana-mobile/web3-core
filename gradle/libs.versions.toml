@@ -10,7 +10,7 @@ diglolCrypto = "0.1.5"
 kborsh = "0.1.2"
 mobileWalletAdapter="2.1.0"
 multimult = "0.2.5"
-rpcCore = "0.2.9"
+rpcCore = "0.2.10"
 salkt = "0.1.1"
 
 # Plugin versions
