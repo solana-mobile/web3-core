@@ -1,19 +1,19 @@
 package com.solana.programs
 
-import com.funkatronics.encoders.Base64
-import com.funkatronics.kborsh.BorshDecoder
 import com.solana.config.TestConfig
+import com.solana.networking.KtorNetworkDriver
 import com.solana.publickey.SolanaPublicKey
+import com.solana.rpc.Commitment
+import com.solana.rpc.SolanaRpcClient
+import com.solana.rpc.TransactionOptions
+import com.solana.rpc.getAccountInfo
 import com.solana.transaction.Message
 import com.solana.transaction.Transaction
-import com.solana.util.RpcClient
 import diglol.crypto.Ed25519
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.jsonArray
-import kotlinx.serialization.json.jsonPrimitive
 import kotlin.test.*
 
 class TokenProgramTests {
@@ -25,7 +25,7 @@ class TokenProgramTests {
         val mintAuthority = Ed25519.generateKeyPair()
         val mintPublicKey = SolanaPublicKey(mint.publicKey)
         val mintAuthorityPublicKey = SolanaPublicKey(mintAuthority.publicKey)
-        val rpc = RpcClient(TestConfig.RPC_URL)
+        val rpc = SolanaRpcClient(TestConfig.RPC_URL, KtorNetworkDriver())
 
         // when
         rpc.requestAirdrop(mintAuthorityPublicKey, 0.1f)
@@ -54,18 +54,21 @@ class TokenProgramTests {
             }
 
         withContext(Dispatchers.Default.limitedParallelism(1)) {
-            rpc.sendAndConfirmTransaction(createAndInitializeMintTransaction).apply {
+            rpc.sendAndConfirmTransaction(createAndInitializeMintTransaction, TransactionOptions(
+                commitment = Commitment.CONFIRMED,
+                skipPreflight = true
+            )).apply {
                 assertNull(this.error)
                 assertNotNull(this.result)
             }
         }
 
-        val accountInfoResponse = rpc.getAccountInfo(mintPublicKey)
+        val accountInfoResponse = rpc.getAccountInfo(mintPublicKey, commitment = Commitment.CONFIRMED)
 
         assertNull(accountInfoResponse.error)
         assertNotNull(accountInfoResponse.result)
         assertEquals(TokenProgram.PROGRAM_ID, accountInfoResponse.result!!.owner)
-        assertEquals(82, accountInfoResponse.result!!.space.toInt())
+        assertEquals(82, accountInfoResponse.result!!.space!!.toInt())
     }
 
     @Test
@@ -79,7 +82,7 @@ class TokenProgramTests {
         val tokenOwner = Ed25519.generateKeyPair()
         val tokenAccountPublicKey = SolanaPublicKey(tokenAccount.publicKey)
         val tokenOwnerPublicKey = SolanaPublicKey(tokenOwner.publicKey)
-        val rpc = RpcClient(TestConfig.RPC_URL)
+        val rpc = SolanaRpcClient(TestConfig.RPC_URL, KtorNetworkDriver())
 
         // when
         rpc.requestAirdrop(mintAuthorityPublicKey, 0.1f)
@@ -109,7 +112,10 @@ class TokenProgramTests {
             }
 
         withContext(Dispatchers.Default.limitedParallelism(1)) {
-            rpc.sendAndConfirmTransaction(createAndInitializeMintTransaction).apply {
+            rpc.sendAndConfirmTransaction(createAndInitializeMintTransaction, TransactionOptions(
+                commitment = Commitment.CONFIRMED,
+                skipPreflight = true
+            )).apply {
                 assertNull(this.error)
                 assertNotNull(this.result)
             }
@@ -141,18 +147,21 @@ class TokenProgramTests {
             }
 
         withContext(Dispatchers.Default.limitedParallelism(1)) {
-            rpc.sendAndConfirmTransaction(createAndInitializeAccountTransaction).apply {
+            rpc.sendAndConfirmTransaction(createAndInitializeAccountTransaction, TransactionOptions(
+                commitment = Commitment.CONFIRMED,
+                skipPreflight = true
+            )).apply {
                 assertNull(this.error)
                 assertNotNull(this.result)
             }
         }
 
-        val accountInfoResponse = rpc.getAccountInfo(tokenAccountPublicKey)
+        val accountInfoResponse = rpc.getAccountInfo(tokenAccountPublicKey, commitment = Commitment.CONFIRMED)
 
         assertNull(accountInfoResponse.error)
         assertNotNull(accountInfoResponse.result)
         assertEquals(TokenProgram.PROGRAM_ID, accountInfoResponse.result!!.owner)
-        assertEquals(165, accountInfoResponse.result!!.space.toInt())
+        assertEquals(165, accountInfoResponse.result!!.space!!.toInt())
     }
 
     @Test
@@ -166,7 +175,7 @@ class TokenProgramTests {
         val ownerTokenAccount = Ed25519.generateKeyPair()
         val ownerPublicKey = SolanaPublicKey(owner.publicKey)
         val ownerTokenAccountPublicKey = SolanaPublicKey(ownerTokenAccount.publicKey)
-        val rpc = RpcClient(TestConfig.RPC_URL)
+        val rpc = SolanaRpcClient(TestConfig.RPC_URL, KtorNetworkDriver())
 
         // when
         rpc.requestAirdrop(mintAuthorityPublicKey, 0.1f)
@@ -196,7 +205,10 @@ class TokenProgramTests {
             }
 
         withContext(Dispatchers.Default.limitedParallelism(1)) {
-            rpc.sendAndConfirmTransaction(createAndInitializeMintTransaction).apply {
+            rpc.sendAndConfirmTransaction(createAndInitializeMintTransaction, TransactionOptions(
+                commitment = Commitment.CONFIRMED,
+                skipPreflight = true
+            )).apply {
                 assertNull(this.error)
                 assertNotNull(this.result)
             }
@@ -229,7 +241,10 @@ class TokenProgramTests {
             }
 
         withContext(Dispatchers.Default.limitedParallelism(1)) {
-            rpc.sendAndConfirmTransaction(createAndInitializeSenderAccountTransaction).apply {
+            rpc.sendAndConfirmTransaction(createAndInitializeSenderAccountTransaction, TransactionOptions(
+                commitment = Commitment.CONFIRMED,
+                skipPreflight = true
+            )).apply {
                 assertNull(this.error)
                 assertNotNull(this.result)
             }
@@ -252,28 +267,35 @@ class TokenProgramTests {
             }
 
         withContext(Dispatchers.Default.limitedParallelism(1)) {
-            rpc.sendAndConfirmTransaction(mintToOwnerAccountTransaction).apply {
+            rpc.sendAndConfirmTransaction(mintToOwnerAccountTransaction, TransactionOptions(
+                commitment = Commitment.CONFIRMED,
+                skipPreflight = true
+            )).apply {
                 assertNull(this.error)
                 assertNotNull(this.result)
             }
         }
 
         // then
-        rpc.getAccountInfo(mintPublicKey).apply{
+        rpc.getAccountInfo(MintAccountInfo.serializer(),
+            mintPublicKey,
+            commitment = Commitment.CONFIRMED
+        ).apply {
             assertNull(error)
             assertNotNull(result)
-            result!!.data.jsonArray.first().apply {
-                val mintAccountInfo = BorshDecoder(Base64.decode(this.jsonPrimitive.content)).decodeSerializableValue(MintAccountInfo.serializer())
+            result!!.data!!.let { mintAccountInfo ->
                 assertEquals(100, mintAccountInfo.supply)
                 assertEquals(mintAuthorityPublicKey, mintAccountInfo.mintAuthority)
             }
         }
 
-        rpc.getAccountInfo(ownerTokenAccountPublicKey).apply {
+        rpc.getAccountInfo(TokenAccountInfo.serializer(),
+            ownerTokenAccountPublicKey,
+            commitment = Commitment.CONFIRMED
+        ).apply {
             assertNull(error)
             assertNotNull(result)
-            result!!.data.jsonArray.first().apply {
-                val tokenAccountInfo = BorshDecoder(Base64.decode(this.jsonPrimitive.content)).decodeSerializableValue(TokenAccountInfo.serializer())
+            result!!.data!!.let { tokenAccountInfo ->
                 assertEquals(100, tokenAccountInfo.amount)
                 assertEquals(mintPublicKey, tokenAccountInfo.mint)
             }
@@ -291,7 +313,7 @@ class TokenProgramTests {
         val ownerTokenAccount = Ed25519.generateKeyPair()
         val ownerPublicKey = SolanaPublicKey(owner.publicKey)
         val ownerTokenAccountPublicKey = SolanaPublicKey(ownerTokenAccount.publicKey)
-        val rpc = RpcClient(TestConfig.RPC_URL)
+        val rpc = SolanaRpcClient(TestConfig.RPC_URL, KtorNetworkDriver())
 
         // when
         rpc.requestAirdrop(mintAuthorityPublicKey, 0.1f)
@@ -321,7 +343,10 @@ class TokenProgramTests {
             }
 
         withContext(Dispatchers.Default.limitedParallelism(1)) {
-            rpc.sendAndConfirmTransaction(createAndInitializeMintTransaction).apply {
+            rpc.sendAndConfirmTransaction(createAndInitializeMintTransaction, TransactionOptions(
+                commitment = Commitment.CONFIRMED,
+                skipPreflight = true
+            )).apply {
                 assertNull(this.error)
                 assertNotNull(this.result)
             }
@@ -354,7 +379,10 @@ class TokenProgramTests {
             }
 
         withContext(Dispatchers.Default.limitedParallelism(1)) {
-            rpc.sendAndConfirmTransaction(createAndInitializeSenderAccountTransaction).apply {
+            rpc.sendAndConfirmTransaction(createAndInitializeSenderAccountTransaction, TransactionOptions(
+                commitment = Commitment.CONFIRMED,
+                skipPreflight = true
+            )).apply {
                 assertNull(this.error)
                 assertNotNull(this.result)
             }
@@ -377,29 +405,36 @@ class TokenProgramTests {
             }
 
         withContext(Dispatchers.Default.limitedParallelism(1)) {
-            rpc.sendAndConfirmTransaction(mintToOwnerAccountTransaction).apply {
+            rpc.sendAndConfirmTransaction(mintToOwnerAccountTransaction, TransactionOptions(
+                commitment = Commitment.CONFIRMED,
+                skipPreflight = true
+            )).apply {
                 assertNull(this.error)
                 assertNotNull(this.result)
             }
         }
 
         // then
-        rpc.getAccountInfo(mintPublicKey).apply{
+        rpc.getAccountInfo(MintAccountInfo.serializer(),
+            mintPublicKey,
+            commitment = Commitment.CONFIRMED
+        ).apply{
             assertNull(error)
             assertNotNull(result)
-            result!!.data.jsonArray.first().apply {
-                val mintAccountInfo = BorshDecoder(Base64.decode(this.jsonPrimitive.content)).decodeSerializableValue(MintAccountInfo.serializer())
+            result!!.data!!.let { mintAccountInfo ->
                 assertEquals(9, mintAccountInfo.decimals)
                 assertEquals(10_000_000_000, mintAccountInfo.supply)
                 assertEquals(mintAuthorityPublicKey, mintAccountInfo.mintAuthority)
             }
         }
 
-        rpc.getAccountInfo(ownerTokenAccountPublicKey).apply {
+        rpc.getAccountInfo(TokenAccountInfo.serializer(),
+            ownerTokenAccountPublicKey,
+            commitment = Commitment.CONFIRMED
+        ).apply {
             assertNull(error)
             assertNotNull(result)
-            result!!.data.jsonArray.first().apply {
-                val tokenAccountInfo = BorshDecoder(Base64.decode(this.jsonPrimitive.content)).decodeSerializableValue(TokenAccountInfo.serializer())
+            result!!.data!!.let { tokenAccountInfo ->
                 assertEquals(10_000_000_000, tokenAccountInfo.amount)
                 assertEquals(mintPublicKey, tokenAccountInfo.mint)
             }
@@ -421,7 +456,7 @@ class TokenProgramTests {
         val senderTokenAccountPublicKey = SolanaPublicKey(senderTokenAccount.publicKey)
         val receiverPublicKey = SolanaPublicKey(receiver.publicKey)
         val receiverTokenAccountPublicKey = SolanaPublicKey(receiverTokenAccount.publicKey)
-        val rpc = RpcClient(TestConfig.RPC_URL)
+        val rpc = SolanaRpcClient(TestConfig.RPC_URL, KtorNetworkDriver())
 
         // when
         rpc.requestAirdrop(mintAuthorityPublicKey, 0.1f)
@@ -451,7 +486,10 @@ class TokenProgramTests {
             }
 
         withContext(Dispatchers.Default.limitedParallelism(1)) {
-            rpc.sendAndConfirmTransaction(createAndInitializeMintTransaction).apply {
+            rpc.sendAndConfirmTransaction(createAndInitializeMintTransaction, TransactionOptions(
+                commitment = Commitment.CONFIRMED,
+                skipPreflight = true
+            )).apply {
                 assertNull(this.error)
                 assertNotNull(this.result)
             }
@@ -484,7 +522,10 @@ class TokenProgramTests {
             }
 
         withContext(Dispatchers.Default.limitedParallelism(1)) {
-            rpc.sendAndConfirmTransaction(createAndInitializeSenderAccountTransaction).apply {
+            rpc.sendAndConfirmTransaction(createAndInitializeSenderAccountTransaction, TransactionOptions(
+                commitment = Commitment.CONFIRMED,
+                skipPreflight = true
+            )).apply {
                 assertNull(this.error)
                 assertNotNull(this.result)
             }
@@ -517,7 +558,10 @@ class TokenProgramTests {
             }
 
         withContext(Dispatchers.Default.limitedParallelism(1)) {
-            rpc.sendAndConfirmTransaction(createAndInitializeReceiverAccountTransaction).apply {
+            rpc.sendAndConfirmTransaction(createAndInitializeReceiverAccountTransaction, TransactionOptions(
+                commitment = Commitment.CONFIRMED,
+                skipPreflight = true
+            )).apply {
                 assertNull(this.error)
                 assertNotNull(this.result)
             }
@@ -540,7 +584,10 @@ class TokenProgramTests {
             }
 
         withContext(Dispatchers.Default.limitedParallelism(1)) {
-            rpc.sendAndConfirmTransaction(mintToSenderAccountTransaction).apply {
+            rpc.sendAndConfirmTransaction(mintToSenderAccountTransaction, TransactionOptions(
+                commitment = Commitment.CONFIRMED,
+                skipPreflight = true
+            )).apply {
                 assertNull(this.error)
                 assertNotNull(this.result)
             }
@@ -563,38 +610,38 @@ class TokenProgramTests {
             }
 
         withContext(Dispatchers.Default.limitedParallelism(1)) {
-            rpc.sendAndConfirmTransaction(transferTransaction).apply {
+            rpc.sendAndConfirmTransaction(transferTransaction, TransactionOptions(
+                commitment = Commitment.CONFIRMED,
+                skipPreflight = true
+            )).apply {
                 assertNull(this.error)
                 assertNotNull(this.result)
             }
         }
 
         // then
-        rpc.getAccountInfo(receiverTokenAccountPublicKey).apply {
+        rpc.getAccountInfo(TokenAccountInfo.serializer(), receiverTokenAccountPublicKey, commitment = Commitment.CONFIRMED).apply {
             assertNull(error)
             assertNotNull(result)
-            result!!.data.jsonArray.first().apply {
-                val tokenAccountInfo = BorshDecoder(Base64.decode(this.jsonPrimitive.content)).decodeSerializableValue(TokenAccountInfo.serializer())
+            result!!.data!!.let { tokenAccountInfo ->
                 assertEquals(10, tokenAccountInfo.amount)
                 assertEquals(mintPublicKey, tokenAccountInfo.mint)
             }
         }
 
-        rpc.getAccountInfo(senderTokenAccountPublicKey).apply {
+        rpc.getAccountInfo(TokenAccountInfo.serializer(), senderTokenAccountPublicKey, commitment = Commitment.CONFIRMED).apply {
             assertNull(error)
             assertNotNull(result)
-            result!!.data.jsonArray.first().apply {
-                val tokenAccountInfo = BorshDecoder(Base64.decode(this.jsonPrimitive.content)).decodeSerializableValue(TokenAccountInfo.serializer())
+            result!!.data!!.let { tokenAccountInfo ->
                 assertEquals(90, tokenAccountInfo.amount)
                 assertEquals(mintPublicKey, tokenAccountInfo.mint)
             }
         }
 
-        rpc.getAccountInfo(mintPublicKey).apply{
+        rpc.getAccountInfo(MintAccountInfo.serializer(), mintPublicKey, commitment = Commitment.CONFIRMED).apply{
             assertNull(error)
             assertNotNull(result)
-            result!!.data.jsonArray.first().apply {
-                val mintAccountInfo = BorshDecoder(Base64.decode(this.jsonPrimitive.content)).decodeSerializableValue(MintAccountInfo.serializer())
+            result!!.data!!.let { mintAccountInfo ->
                 assertEquals(0, mintAccountInfo.decimals)
                 assertEquals(100, mintAccountInfo.supply)
                 assertEquals(mintAuthorityPublicKey, mintAccountInfo.mintAuthority)
@@ -617,7 +664,7 @@ class TokenProgramTests {
         val senderTokenAccountPublicKey = SolanaPublicKey(senderTokenAccount.publicKey)
         val receiverPublicKey = SolanaPublicKey(receiver.publicKey)
         val receiverTokenAccountPublicKey = SolanaPublicKey(receiverTokenAccount.publicKey)
-        val rpc = RpcClient(TestConfig.RPC_URL)
+        val rpc = SolanaRpcClient(TestConfig.RPC_URL, KtorNetworkDriver())
 
         // when
         rpc.requestAirdrop(mintAuthorityPublicKey, 0.1f)
@@ -647,7 +694,10 @@ class TokenProgramTests {
             }
 
         withContext(Dispatchers.Default.limitedParallelism(1)) {
-            rpc.sendAndConfirmTransaction(createAndInitializeMintTransaction).apply {
+            rpc.sendAndConfirmTransaction(createAndInitializeMintTransaction, TransactionOptions(
+                commitment = Commitment.CONFIRMED,
+                skipPreflight = true
+            )).apply {
                 assertNull(this.error)
                 assertNotNull(this.result)
             }
@@ -680,7 +730,10 @@ class TokenProgramTests {
             }
 
         withContext(Dispatchers.Default.limitedParallelism(1)) {
-            rpc.sendAndConfirmTransaction(createAndInitializeSenderAccountTransaction).apply {
+            rpc.sendAndConfirmTransaction(createAndInitializeSenderAccountTransaction, TransactionOptions(
+                commitment = Commitment.CONFIRMED,
+                skipPreflight = true
+            )).apply {
                 assertNull(this.error)
                 assertNotNull(this.result)
             }
@@ -713,7 +766,10 @@ class TokenProgramTests {
             }
 
         withContext(Dispatchers.Default.limitedParallelism(1)) {
-            rpc.sendAndConfirmTransaction(createAndInitializeReceiverAccountTransaction).apply {
+            rpc.sendAndConfirmTransaction(createAndInitializeReceiverAccountTransaction, TransactionOptions(
+                commitment = Commitment.CONFIRMED,
+                skipPreflight = true
+            )).apply {
                 assertNull(this.error)
                 assertNotNull(this.result)
             }
@@ -736,7 +792,10 @@ class TokenProgramTests {
             }
 
         withContext(Dispatchers.Default.limitedParallelism(1)) {
-            rpc.sendAndConfirmTransaction(mintToSenderAccountTransaction).apply {
+            rpc.sendAndConfirmTransaction(mintToSenderAccountTransaction, TransactionOptions(
+                commitment = Commitment.CONFIRMED,
+                skipPreflight = true
+            )).apply {
                 assertNull(this.error)
                 assertNotNull(this.result)
             }
@@ -761,38 +820,47 @@ class TokenProgramTests {
             }
 
         withContext(Dispatchers.Default.limitedParallelism(1)) {
-            rpc.sendAndConfirmTransaction(transferTransaction).apply {
+            rpc.sendAndConfirmTransaction(transferTransaction, TransactionOptions(
+                commitment = Commitment.CONFIRMED,
+                skipPreflight = true
+            )).apply {
                 assertNull(this.error)
                 assertNotNull(this.result)
             }
         }
 
         // then
-        rpc.getAccountInfo(receiverTokenAccountPublicKey).apply {
+        rpc.getAccountInfo(TokenAccountInfo.serializer(),
+            receiverTokenAccountPublicKey,
+            commitment = Commitment.CONFIRMED
+        ).apply {
             assertNull(error)
             assertNotNull(result)
-            result!!.data.jsonArray.first().apply {
-                val tokenAccountInfo = BorshDecoder(Base64.decode(this.jsonPrimitive.content)).decodeSerializableValue(TokenAccountInfo.serializer())
+            result!!.data!!.let { tokenAccountInfo ->
                 assertEquals(10_000_000, tokenAccountInfo.amount)
                 assertEquals(mintPublicKey, tokenAccountInfo.mint)
             }
         }
 
-        rpc.getAccountInfo(senderTokenAccountPublicKey).apply {
+        rpc.getAccountInfo(TokenAccountInfo.serializer(),
+            senderTokenAccountPublicKey,
+            commitment = Commitment.CONFIRMED
+        ).apply {
             assertNull(error)
             assertNotNull(result)
-            result!!.data.jsonArray.first().apply {
-                val tokenAccountInfo = BorshDecoder(Base64.decode(this.jsonPrimitive.content)).decodeSerializableValue(TokenAccountInfo.serializer())
+            result!!.data!!.let { tokenAccountInfo ->
                 assertEquals(90_000_000, tokenAccountInfo.amount)
                 assertEquals(mintPublicKey, tokenAccountInfo.mint)
             }
         }
 
-        rpc.getAccountInfo(mintPublicKey).apply{
+        rpc.getAccountInfo(MintAccountInfo.serializer(),
+            mintPublicKey,
+            commitment = Commitment.CONFIRMED
+        ).apply{
             assertNull(error)
             assertNotNull(result)
-            result!!.data.jsonArray.first().apply {
-                val mintAccountInfo = BorshDecoder(Base64.decode(this.jsonPrimitive.content)).decodeSerializableValue(MintAccountInfo.serializer())
+            result!!.data!!.let { mintAccountInfo ->
                 assertEquals(6, mintAccountInfo.decimals)
                 assertEquals(100_000_000, mintAccountInfo.supply)
                 assertEquals(mintAuthorityPublicKey, mintAccountInfo.mintAuthority)
@@ -811,7 +879,7 @@ class TokenProgramTests {
         val tokenOwner = Ed25519.generateKeyPair()
         val tokenAccountPublicKey = SolanaPublicKey(tokenAccount.publicKey)
         val tokenOwnerPublicKey = SolanaPublicKey(tokenOwner.publicKey)
-        val rpc = RpcClient(TestConfig.RPC_URL)
+        val rpc = SolanaRpcClient(TestConfig.RPC_URL, KtorNetworkDriver())
 
         // when
         rpc.requestAirdrop(mintAuthorityPublicKey, 0.1f)
@@ -841,7 +909,10 @@ class TokenProgramTests {
             }
 
         withContext(Dispatchers.Default.limitedParallelism(1)) {
-            rpc.sendAndConfirmTransaction(createAndInitializeMintTransaction).apply {
+            rpc.sendAndConfirmTransaction(createAndInitializeMintTransaction, TransactionOptions(
+                commitment = Commitment.CONFIRMED,
+                skipPreflight = true
+            )).apply {
                 assertNull(this.error)
                 assertNotNull(this.result)
             }
@@ -874,17 +945,20 @@ class TokenProgramTests {
             }
 
         withContext(Dispatchers.Default.limitedParallelism(1)) {
-            rpc.sendAndConfirmTransaction(createAndInitializeAccountTransaction).apply {
+            rpc.sendAndConfirmTransaction(createAndInitializeAccountTransaction, TransactionOptions(
+                commitment = Commitment.CONFIRMED,
+                skipPreflight = true
+            )).apply {
                 assertNull(this.error)
                 assertNotNull(this.result)
             }
         }
 
-        rpc.getAccountInfo(tokenAccountPublicKey).apply {
+        rpc.getAccountInfo(tokenAccountPublicKey, commitment = Commitment.CONFIRMED).apply {
             assertNull(error)
             assertNotNull(result)
             assertEquals(TokenProgram.PROGRAM_ID, result!!.owner)
-            assertEquals(165, result!!.space.toInt())
+            assertEquals(165, result!!.space!!.toInt())
         }
 
         // Close Account
@@ -903,14 +977,17 @@ class TokenProgramTests {
             }
 
         withContext(Dispatchers.Default.limitedParallelism(1)) {
-            rpc.sendAndConfirmTransaction(closeAccountTransaction).apply {
+            rpc.sendAndConfirmTransaction(closeAccountTransaction, TransactionOptions(
+                commitment = Commitment.CONFIRMED,
+                skipPreflight = true
+            )).apply {
                 assertNull(this.error)
                 assertNotNull(this.result)
             }
         }
 
         // then
-        rpc.getAccountInfo(tokenAccountPublicKey).apply {
+        rpc.getAccountInfo(tokenAccountPublicKey, commitment = Commitment.CONFIRMED).apply {
             assertNull(error)
             assertNull(result)
         }

@@ -1,10 +1,13 @@
 package com.solana.programs
 
 import com.solana.config.TestConfig
+import com.solana.networking.KtorNetworkDriver
 import com.solana.publickey.SolanaPublicKey
+import com.solana.rpc.Commitment
+import com.solana.rpc.SolanaRpcClient
+import com.solana.rpc.TransactionOptions
 import com.solana.transaction.Message
 import com.solana.transaction.Transaction
-import com.solana.util.RpcClient
 import diglol.crypto.Ed25519
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.runTest
@@ -23,7 +26,7 @@ class SystemProgramTests {
         val newAccountKeyPair = Ed25519.generateKeyPair()
         val payerPubkey = SolanaPublicKey(payerKeyPair.publicKey)
         val newAccountPubkey = SolanaPublicKey(newAccountKeyPair.publicKey)
-        val rpc = RpcClient(TestConfig.RPC_URL)
+        val rpc = SolanaRpcClient(TestConfig.RPC_URL, KtorNetworkDriver())
 
         // when
         val airdropResponse = rpc.requestAirdrop(payerPubkey, 0.1f)
@@ -47,7 +50,10 @@ class SystemProgramTests {
             }
 
         withContext(Dispatchers.Default.limitedParallelism(1)) {
-            rpc.sendAndConfirmTransaction(transaction)
+            rpc.sendAndConfirmTransaction(transaction, TransactionOptions(
+                commitment = Commitment.CONFIRMED,
+                skipPreflight = true
+            ))
         }
 
         val response = rpc.getBalance(newAccountPubkey)
@@ -67,7 +73,7 @@ class SystemProgramTests {
         val receiverKeyPair = Ed25519.generateKeyPair()
         val payerPubkey = SolanaPublicKey(payerKeyPair.publicKey)
         val receiverPubkey = SolanaPublicKey(receiverKeyPair.publicKey)
-        val rpc = RpcClient(TestConfig.RPC_URL)
+        val rpc = SolanaRpcClient(TestConfig.RPC_URL, KtorNetworkDriver())
         val balance = 10000000L // lamports
 
         // when
@@ -83,7 +89,10 @@ class SystemProgramTests {
             }
 
         withContext(Dispatchers.Default.limitedParallelism(1)) {
-            rpc.sendAndConfirmTransaction(transaction)
+            rpc.sendAndConfirmTransaction(transaction, TransactionOptions(
+                commitment = Commitment.CONFIRMED,
+                skipPreflight = true
+            ))
         }
 
         val response = rpc.getBalance(receiverPubkey)

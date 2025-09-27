@@ -10,11 +10,11 @@ diglolCrypto = "0.1.5"
 kborsh = "0.1.2"
 mobileWalletAdapter="2.1.0"
 multimult = "0.2.5"
-rpcCore = "0.2.9"
+rpcCore = "0.2.10"
 salkt = "0.1.1"
 
 # Plugin versions
-androidGradlePlugin = "8.2.2"
+androidGradlePlugin = "8.10.1"
 kotlin = "2.2.20"
 kotlinSerialization = "1.9.0"
 vanniktechMavenPublish = "0.34.0"
@@ -37,6 +37,8 @@ mwa-clientlib-ktx = { module = "com.solanamobile:mobile-wallet-adapter-clientlib
 mwa-walletlib = { module = "com.solanamobile:mobile-wallet-adapter-walletlib", version.ref = "mobileWalletAdapter" }
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
 rpc-core = { group = "com.solanamobile", name = "rpc-core", version.ref = "rpcCore" }
+rpc-ktordriver = { group = "com.solanamobile", name = "rpc-ktordriver", version.ref = "rpcCore" }
+rpc-solana = { group = "com.solanamobile", name = "rpc-solana", version.ref = "rpcCore" }
 salkt = { group = "io.github.funkatronics", name = "salkt", version.ref = "salkt" }
 
 [plugins]

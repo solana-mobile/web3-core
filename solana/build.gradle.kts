@@ -42,6 +42,8 @@ kotlin {
                 implementation(libs.ktor.client.core)
                 implementation(libs.ktor.client.cio)
                 implementation(libs.rpc.core)
+                implementation(libs.rpc.ktordriver)
+                implementation(libs.rpc.solana)
             }
         }
     }
