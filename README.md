@@ -87,7 +87,7 @@ val rpcResponse = rpcDriver.makeRequest(rpcRequest, JsonElement.serializer())
 ```
 
 ### Initiate an SPL Transfer with ATAs
-```
+```kotlin
 // gather public keys
 val mint = SolanaPublicKey(/* public key of the token mint you want to transfer */)
 val senderPublicKey = SolanaPublicKey(/* sender's public key */)
