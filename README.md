@@ -87,11 +87,11 @@ val rpcResponse = rpcDriver.makeRequest(rpcRequest, JsonElement.serializer())
 ```
 
 <!-- TAG_VERSION -->
-[badge-latest-release]: https://img.shields.io/badge/latest--release-0.2.5-blue.svg?style=flat
+[badge-latest-release]: https://img.shields.io/badge/latest--release-0.3.0-blue.svg?style=flat
 [badge-license]: https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg?style=flat
 
 <!-- TAG_DEPENDENCIES -->
-[badge-kotlin]: https://img.shields.io/badge/kotlin-1.9.21-blue.svg?logo=kotlin
+[badge-kotlin]: https://img.shields.io/badge/kotlin-2.2.20-blue.svg?logo=kotlin
 
 [url-latest-release]: https://github.com/solana-mobile/web3-core/releases/latest
 [url-license]: https://www.apache.org/licenses/LICENSE-2.0.txt
