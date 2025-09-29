@@ -128,7 +128,7 @@ rpc.sendAndConfirmTransaction(
 ```
 
 <!-- TAG_VERSION -->
-[badge-latest-release]: https://img.shields.io/badge/latest--release-0.3.0-blue.svg?style=flat
+[badge-latest-release]: https://img.shields.io/badge/dynamic/json.svg?url=https://api.github.com/repos/solana-mobile/web3-core/releases/latest&query=tag_name&label=release&color=blue
 [badge-license]: https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg?style=flat
 
 <!-- TAG_DEPENDENCIES -->
