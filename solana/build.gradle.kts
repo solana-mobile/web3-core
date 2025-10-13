@@ -10,7 +10,7 @@ val buildDir = layout.buildDirectory.asFile.get()
 val generatedDir = "${buildDir}/generated/src/commonTest/kotlin"
 
 kotlin {
-    jvmToolchain(11)
+    jvmToolchain(17)
     jvm()
     listOf(
         iosX64(),

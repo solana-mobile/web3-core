@@ -8,7 +8,7 @@ val artifactIdPrefix: String by project
 val moduleArtifactId = "$artifactIdPrefix-core"
 
 kotlin {
-    jvmToolchain(11)
+    jvmToolchain(17)
     jvm()
     listOf(
         iosX64(),
