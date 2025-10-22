@@ -21,6 +21,11 @@ kotlin {
             baseName = moduleArtifactId
         }
     }
+    js {
+        browser()
+        nodejs()
+        outputModuleName = moduleArtifactId
+    }
     sourceSets {
         val commonMain by getting {
             dependencies {
