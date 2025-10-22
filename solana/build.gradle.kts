@@ -39,8 +39,6 @@ kotlin {
             }
         }
         val commonTest by getting {
-            // disable validator testing temporarily until rpc-core supports js
-            kotlin.exclude("com/solana/programs/**")
             kotlin.srcDir(File(generatedDir))
             dependencies {
                 implementation(libs.kotlin.test)
@@ -49,9 +47,9 @@ kotlin {
                 implementation(libs.ktor.client.core)
                 implementation(libs.ktor.client.cio)
                 // disable validator testing temporarily until rpc-core supports js
-//                implementation(libs.rpc.core)
-//                implementation(libs.rpc.ktordriver)
-//                implementation(libs.rpc.solana)
+                implementation(libs.rpc.core)
+                implementation(libs.rpc.ktordriver)
+                implementation(libs.rpc.solana)
             }
         }
     }
