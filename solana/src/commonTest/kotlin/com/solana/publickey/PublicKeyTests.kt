@@ -39,6 +39,6 @@ class PublicKeyTests {
         val publicKey = SolanaPublicKey(publicKeyBytes)
 
         // then
-        assertEquals(expectedBase58, publicKey.string())
+        assertEquals(expectedBase58, publicKey.address)
     }
 }

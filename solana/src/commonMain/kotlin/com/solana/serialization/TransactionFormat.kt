@@ -3,6 +3,7 @@ package com.solana.serialization
 import com.solana.util.asVarint
 import kotlinx.serialization.BinaryFormat
 import kotlinx.serialization.DeserializationStrategy
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.SerializationStrategy
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.AbstractDecoder
@@ -44,7 +45,15 @@ class TransactionDecoder(val bytes: ByteArray) : AbstractDecoder() {
 
     override val serializersModule = EmptySerializersModule()
 
-    override fun decodeByte(): Byte = bytes[position++]
+    override fun decodeByte(): Byte {
+        if (position >= bytes.size) {
+            throw SerializationException(
+                "Attempt to read past end of buffer at $position (size=${bytes.size})"
+            )
+        }
+        return bytes[position++]
+    }
+
 
     // Not called for sequential decoders
     override fun decodeElementIndex(descriptor: SerialDescriptor): Int = 0
