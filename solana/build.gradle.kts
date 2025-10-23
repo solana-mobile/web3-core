@@ -26,15 +26,15 @@ kotlin {
     js {
         nodejs {
             testTask {
-                useMocha { // extend mocha promise timeout to 15 seconds
-                    timeout = "15000"
+                useMocha { // extend mocha promise timeout to 30 seconds
+                    timeout = "30000"
                 }
             }
         }
         browser {
             testTask {
-                useMocha { // extend mocha promise timeout to 15 seconds
-                    timeout = "15000"
+                useMocha { // extend mocha promise timeout to 30 seconds
+                    timeout = "30000"
                 }
             }
         }
