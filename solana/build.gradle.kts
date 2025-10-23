@@ -24,8 +24,20 @@ kotlin {
         }
     }
     js {
-        browser()
-        nodejs()
+        nodejs {
+            testTask {
+                useMocha { // extend mocha promise timeout to 15 seconds
+                    timeout = "15000"
+                }
+            }
+        }
+        browser {
+            testTask {
+                useMocha { // extend mocha promise timeout to 15 seconds
+                    timeout = "15000"
+                }
+            }
+        }
         outputModuleName = moduleArtifactId
     }
     sourceSets {
@@ -46,7 +58,6 @@ kotlin {
                 implementation(libs.crypto)
                 implementation(libs.ktor.client.core)
                 implementation(libs.ktor.client.cio)
-                // disable validator testing temporarily until rpc-core supports js
                 implementation(libs.rpc.core)
                 implementation(libs.rpc.ktordriver)
                 implementation(libs.rpc.solana)
