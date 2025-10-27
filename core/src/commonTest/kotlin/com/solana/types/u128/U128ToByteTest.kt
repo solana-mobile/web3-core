@@ -7,7 +7,7 @@ import kotlin.test.assertEquals
 class U128ToByteTest {
 
     @Test
-    fun `U128 toByte() converts to equivalent Byte`() {
+    fun `U128 toByte converts to equivalent Byte`() {
         // given
         val byteValue: Byte = 123
         val u128 = U128.parse("123")
@@ -20,7 +20,7 @@ class U128ToByteTest {
     }
 
     @Test
-    fun `U128 toByte() converts max value Byte`() {
+    fun `U128 toByte converts max value Byte`() {
         // given
         val byteValue: Byte = Byte.MAX_VALUE // 127
         val u128 = U128.parse("127")
@@ -33,7 +33,7 @@ class U128ToByteTest {
     }
 
     @Test
-    fun `U128 toByte() converts to truncated Byte`() {
+    fun `U128 toByte converts to truncated Byte`() {
         // given
         val intValue = 300 // larger than Byte.MAX_VALUE
         val u128 = U128.parse(intValue.toString())

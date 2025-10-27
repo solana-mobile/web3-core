@@ -7,7 +7,7 @@ import kotlin.test.assertEquals
 class U128ToDoubleTest {
 
     @Test
-    fun `U128 toDouble() converts to equivalent Double for small values`() {
+    fun `U128 toDouble converts to equivalent Double for small values`() {
         // given
         val u128 = U128.parse("12345")
         val expected = 12345.0
@@ -20,7 +20,7 @@ class U128ToDoubleTest {
     }
 
     @Test
-    fun `U128 toDouble() converts max precise integer within Double mantissa`() {
+    fun `U128 toDouble converts max precise integer within Double mantissa`() {
         // given
         // 2^53 = 9007199254740992 is the largest integer exactly representable in Double
         val value = 9007199254740992UL
@@ -35,7 +35,7 @@ class U128ToDoubleTest {
     }
 
     @Test
-    fun `U128 toDouble() converts max U128 value with expected precision loss`() {
+    fun `U128 toDouble converts max U128 value with expected precision loss`() {
         // given
         val u128 = U128.MAX_VALUE
         val expected = 3.402823669209385E38

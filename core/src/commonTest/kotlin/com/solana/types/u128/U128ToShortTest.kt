@@ -7,7 +7,7 @@ import kotlin.test.assertEquals
 class U128ToShortTest {
 
     @Test
-    fun `U128 toShort() converts to equivalent Short`() {
+    fun `U128 toShort converts to equivalent Short`() {
         // given
         val shortValue: Short = 1234
         val u128 = U128.parse("1234")
@@ -20,7 +20,7 @@ class U128ToShortTest {
     }
 
     @Test
-    fun `U128 toShort() converts max value Short`() {
+    fun `U128 toShort converts max value Short`() {
         // given
         val shortValue: Short = Short.MAX_VALUE // 32767
         val u128 = U128.parse("32767")
@@ -33,7 +33,7 @@ class U128ToShortTest {
     }
 
     @Test
-    fun `U128 toShort() converts to truncated Short`() {
+    fun `U128 toShort converts to truncated Short`() {
         // given
         val intValue = 40000 // larger than Short.MAX_VALUE
         val u128 = U128.parse(intValue.toString())
