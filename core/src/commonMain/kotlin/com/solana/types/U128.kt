@@ -114,8 +114,13 @@ class U128 : Number, Comparable<U128> {
     }
 
     override fun toString(): String {
-        if (bytes.all { it == 0.toByte() }) return "0"
-        return MultiBase.Base10.encode(bytes.reversedArray()).drop(1).dropWhile { it == '0' }
+        return if (bytes.any { it != 0.toByte() }) {
+            MultiBase.Base10.encode(bytes.reversedArray())
+                .drop(1) // remove the MultiBase identifier
+                .dropWhile { it == '0' } // drop leading zeros
+        } else {
+            "0" // bytes are all zero, just return zero string
+        }
     }
 
     private fun getULong(offset: Int): ULong {
