@@ -32,14 +32,6 @@ class U128 : Number, Comparable<U128> {
          */
         const val SIZE_BITS: Int = 128
 
-        private fun fromBigEndian(bytes: ByteArray): U128 {
-            require(bytes.size <= 16)
-            val padded = ByteArray(16)
-            // copy into the right end (big‑endian)
-            bytes.copyInto(padded, 16 - bytes.size)
-            return U128(padded.reversedArray()) // store little‑endian internally
-        }
-
         fun parse(string: String): U128 {
             require(string.isNotEmpty()) { "Invalid U128 String: Empty string" }
             require(string.all { it in '0'..'9' }) { "Invalid U128 String: Non-digit character" }
@@ -50,6 +42,14 @@ class U128 : Number, Comparable<U128> {
 
             // decode the string as a MultiBase Encoded Base10 String
             return fromBigEndian(MultiBase.decode("9$string"))
+        }
+
+        private fun fromBigEndian(bytes: ByteArray): U128 {
+            require(bytes.size <= 16)
+            val padded = ByteArray(16)
+            // copy into the right end (big‑endian)
+            bytes.copyInto(padded, 16 - bytes.size)
+            return U128(padded.reversedArray()) // store little‑endian internally
         }
     }
 
@@ -111,6 +111,12 @@ class U128 : Number, Comparable<U128> {
         other as U128
 
         return bytes.contentEquals(other.bytes)
+    }
+
+    override fun toString(): String {
+        println(bytes.contentToString())
+        if (bytes.all { it == 0.toByte() }) return "0"
+        return MultiBase.Base10.encode(bytes.reversedArray()).drop(1).dropWhile { it == '0' }
     }
 
     private fun getULong(offset: Int): ULong {
