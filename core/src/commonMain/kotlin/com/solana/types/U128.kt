@@ -114,7 +114,6 @@ class U128 : Number, Comparable<U128> {
     }
 
     override fun toString(): String {
-        println(bytes.contentToString())
         if (bytes.all { it == 0.toByte() }) return "0"
         return MultiBase.Base10.encode(bytes.reversedArray()).drop(1).dropWhile { it == '0' }
     }
