@@ -78,7 +78,7 @@ class U128SerializationTest {
     }
 
     @Test
-    fun `U128 serializes MAX_VALUE to Borsh as ByteArray(16) { -1 }`() {
+    fun `U128 serializes MAX_VALUE to Borsh as max value ByteArray`() {
         // given
         @Serializable
         data class TestClass(val u128: U128)
