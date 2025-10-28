@@ -1,9 +1,14 @@
 package com.solana.types
 
 import com.funkatronics.multibase.MultiBase
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 
-@Serializable
+@Serializable(with = U128Serializer::class)
 class U128 : Number, Comparable<U128> {
     companion object {
         /**
@@ -44,12 +49,20 @@ class U128 : Number, Comparable<U128> {
             return fromBigEndian(MultiBase.decode("9$string"))
         }
 
-        private fun fromBigEndian(bytes: ByteArray): U128 {
+        fun fromBigEndian(bytes: ByteArray): U128 {
             require(bytes.size <= 16)
             val padded = ByteArray(16)
             // copy into the right end (big‑endian)
             bytes.copyInto(padded, 16 - bytes.size)
             return U128(padded.reversedArray()) // store little‑endian internally
+        }
+
+        fun fromLittleEndian(bytes: ByteArray): U128 {
+            require(bytes.size <= 16)
+            val padded = ByteArray(16)
+            // copy into the left end (little‑endian)
+            bytes.copyInto(padded, 0)
+            return U128(padded) // store little‑endian internally
         }
     }
 
@@ -129,5 +142,33 @@ class U128 : Number, Comparable<U128> {
             v = v or ((bytes[offset + i].toULong() and 0xFFu) shl (8 * i))
         }
         return v
+    }
+}
+
+private class U128Serializer : KSerializer<U128> {
+    override val descriptor =
+        PrimitiveSerialDescriptor("U128", PrimitiveKind.STRING)
+
+    override fun serialize(encoder: Encoder, value: U128) {
+        when (encoder) {
+            is com.funkatronics.kborsh.BorshEncoder -> {
+                value.toByteArray().forEach {
+                    encoder.encodeByte(it)
+                }
+            }
+            else -> encoder.encodeString(value.toString())
+        }
+    }
+
+    override fun deserialize(decoder: Decoder): U128 {
+        return when (decoder) {
+            is com.funkatronics.kborsh.BorshDecoder -> {
+                val bytes = ByteArray(U128.SIZE_BYTES) {
+                    decoder.decodeByte()
+                }
+                U128.fromLittleEndian(bytes)
+            }
+            else -> U128.parse(decoder.decodeString())
+        }
     }
 }
