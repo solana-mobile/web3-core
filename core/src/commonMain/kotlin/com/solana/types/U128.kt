@@ -38,6 +38,8 @@ class U128 : Number, Comparable<U128> {
         const val SIZE_BITS: Int = 128
 
         fun parse(string: String): U128 {
+            // Remove underscores and trailing 'n'/'u' character that are sometimes preset in numeric literals
+            val string = string.replace(Regex("(_|n$|u$)"), "")
             require(string.isNotEmpty()) { "Invalid U128 String: Empty string" }
             require(string.all { it in '0'..'9' }) { "Invalid U128 String: Non-digit character" }
             require(string.length <= 39) { "Invalid U128 String: Too many digits for U128" }

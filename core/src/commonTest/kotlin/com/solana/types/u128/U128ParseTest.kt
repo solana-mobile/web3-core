@@ -9,7 +9,7 @@ import kotlin.test.assertFailsWith
 class U128ParseTest {
 
     @Test
-    fun `parse Int string string successfully parses Int value`() {
+    fun `parse Int string successfully parses Int value`() {
         // given
         val intString = "1234"
         val expected = byteArrayOf(
@@ -80,5 +80,65 @@ class U128ParseTest {
         assertFailsWith(IllegalArgumentException::class) {
             U128.parse(u129String)
         }
+    }
+
+    @Test
+    fun `parse UInt string successfully parses UInt value`() {
+        // given
+        val intString = "1234u"
+        val expected = byteArrayOf(
+            -46, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+        ) // 1234 bytes, little-endian
+
+        // when
+        val result = U128.parse(intString)
+
+        // then
+        assertContentEquals(expected, result.toByteArray())
+    }
+
+    @Test
+    fun `parse underscore separated string successfully parses value`() {
+        // given
+        val intString = "1_234"
+        val expected = byteArrayOf(
+            -46, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+        ) // 1234 bytes, little-endian
+
+        // when
+        val result = U128.parse(intString)
+
+        // then
+        assertContentEquals(expected, result.toByteArray())
+    }
+
+    @Test
+    fun `parse BigInt literal string successfully parses value`() {
+        // given
+        val intString = "1234n"
+        val expected = byteArrayOf(
+            -46, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+        ) // 1234 bytes, little-endian
+
+        // when
+        val result = U128.parse(intString)
+
+        // then
+        assertContentEquals(expected, result.toByteArray())
+    }
+
+    @Test
+    fun `parse underscore separated BigInt literal string successfully parses value`() {
+        // given
+        val intString = "1_234n"
+        val expected = byteArrayOf(
+            -46, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+        ) // 1234 bytes, little-endian
+
+        // when
+        val result = U128.parse(intString)
+
+        // then
+        assertContentEquals(expected, result.toByteArray())
     }
 }
