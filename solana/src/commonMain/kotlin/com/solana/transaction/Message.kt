@@ -3,6 +3,7 @@ package com.solana.transaction
 import com.solana.publickey.SolanaPublicKey
 import com.solana.publickey.SolanaPublicKeySerializer
 import com.solana.serialization.TransactionFormat
+import com.solana.signer.Signer
 import kotlinx.serialization.*
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.descriptors.SerialDescriptor
@@ -164,3 +165,8 @@ object MessageSerializer : KSerializer<Message> {
 }
 
 fun Message.toUnsignedTransaction(): Transaction = Transaction(this)
+suspend fun Message.Builder.buildSignedTransaction(vararg signers: Signer) = build().toSignedTransaction(*signers)
+suspend fun Message.toSignedTransaction(vararg signers: Signer): Transaction {
+    val serializedMessage = serialize()
+    return Transaction(signers.map { it.signPayload(serializedMessage).getOrThrow() }, this)
+}
