@@ -6,6 +6,7 @@ import com.solana.util.asVarint
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 
 class MessageTests {
 
@@ -148,5 +149,222 @@ class MessageTests {
         assertEquals(expectedSignatureCount, transaction.signatures.size)
         assertContentEquals(expectedSignature, transaction.signatures[0])
         assertContentEquals(expectedSignature, transaction.signatures[1])
+    }
+
+    @Test
+    fun testBuildMessageWithFeePayer() {
+        // given
+        val account1 = SolanaPublicKey.from("11111111111111111111111111111111")
+        val account2 = SolanaPublicKey.from("22222222222222222222222222222222222222222222")
+        val account3 = SolanaPublicKey.from("33333333333333333333333333333333333333333333")
+        val programId = SolanaPublicKey.from("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr")
+        val blockhash = Blockhash(ByteArray(32))
+        val expectedMessage = LegacyMessage(
+            signatureCount = 1.toUByte(), // 1 signer
+            readOnlyAccounts = 0u,
+            readOnlyNonSigners = 1u,
+            accounts = listOf(
+                account3, // payer must go first
+                account1,
+                account2,
+                programId
+            ),
+            blockhash = blockhash,
+            instructions = listOf(
+                Instruction(
+                    programIdIndex = 3u,
+                    accountIndices = byteArrayOf(1, 2, 3),
+                    data = byteArrayOf()
+                )
+            )
+        )
+
+        // when
+        val message = Message.Builder()
+            .addInstruction(TransactionInstruction(
+                programId,
+                listOf(
+                    AccountMeta(account1, isSigner = false, isWritable = true),
+                    AccountMeta(account2, isSigner = false, isWritable = true),
+                    AccountMeta(programId, isSigner = false, isWritable = false)
+                ),
+                byteArrayOf()
+            ))
+            .setRecentBlockhash(blockhash)
+            .addFeePayer(account3)
+            .build()
+
+        // then
+        assertEquals(expectedMessage, message)
+    }
+
+    @Test
+    fun testBuildMessageWithDuplicateFeePayer() {
+        // given
+        val account1 = SolanaPublicKey.from("11111111111111111111111111111111")
+        val account2 = SolanaPublicKey.from("22222222222222222222222222222222222222222222")
+        val account3 = SolanaPublicKey.from("33333333333333333333333333333333333333333333")
+        val programId = SolanaPublicKey.from("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr")
+        val blockhash = Blockhash(ByteArray(32))
+        val expectedMessage = LegacyMessage(
+            signatureCount = 1.toUByte(), // 1 signer
+            readOnlyAccounts = 0u,
+            readOnlyNonSigners = 1u,
+            accounts = listOf(
+                account3, // payer must go first
+                account1,
+                account2,
+                programId
+            ),
+            blockhash = blockhash,
+            instructions = listOf(
+                Instruction(
+                    programIdIndex = 3u,
+                    accountIndices = byteArrayOf(1, 2, 0, 3),
+                    data = byteArrayOf()
+                )
+            )
+        )
+
+        // when
+        val message = Message.Builder()
+            .addInstruction(TransactionInstruction(
+                programId,
+                listOf(
+                    AccountMeta(account1, isSigner = false, isWritable = true),
+                    AccountMeta(account2, isSigner = false, isWritable = true),
+                    AccountMeta(account3, isSigner = false, isWritable = false),
+                    AccountMeta(programId, isSigner = false, isWritable = false)
+                ),
+                byteArrayOf()
+            ))
+            .setRecentBlockhash(blockhash)
+            .addFeePayer(account3)
+            .build()
+
+        // then
+        assertEquals(expectedMessage, message)
+    }
+
+    @Test
+    fun testBuildMessageWithoutFeePayerThrows() {
+        // given
+        val account = SolanaPublicKey.from("11111111111111111111111111111111")
+        val programId = SolanaPublicKey.from("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr")
+        val blockhash = Blockhash(ByteArray(32))
+
+        // when
+        val message = Message.Builder()
+            .addInstruction(TransactionInstruction(
+                programId,
+                listOf(
+                    AccountMeta(account, isSigner = false, isWritable = true),
+                    AccountMeta(programId, isSigner = false, isWritable = false)
+                ),
+                byteArrayOf()
+            ))
+            .setRecentBlockhash(blockhash)
+
+        // then
+        assertFailsWith<IllegalStateException> {
+            message.build()
+        }
+    }
+
+    @Test
+    fun testBuildMessageWithDuplicateAccountMeta() {
+        // given
+        val account1 = SolanaPublicKey.from("11111111111111111111111111111111")
+        val account2 = SolanaPublicKey.from("22222222222222222222222222222222222222222222")
+        val account3 = SolanaPublicKey.from("33333333333333333333333333333333333333333333")
+        val programId = SolanaPublicKey.from("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr")
+        val blockhash = Blockhash(ByteArray(32))
+        val expectedMessage = LegacyMessage(
+            signatureCount = 1.toUByte(), // 1 signer
+            readOnlyAccounts = 0u,
+            readOnlyNonSigners = 2u,
+            accounts = listOf(
+                account3, // payer must go first
+                account1,
+                account2,
+                programId
+            ),
+            blockhash = blockhash,
+            instructions = listOf(
+                Instruction(
+                    programIdIndex = 3u,
+                    accountIndices = byteArrayOf(1, 2, 0, 0, 3),
+                    data = byteArrayOf()
+                )
+            )
+        )
+
+        // when
+        val message = Message.Builder()
+            .addInstruction(TransactionInstruction(
+                programId,
+                listOf(
+                    AccountMeta(account1, isSigner = false, isWritable = true),
+                    AccountMeta(account2, isSigner = false, isWritable = false),
+                    AccountMeta(account3, isSigner = false, isWritable = false),
+                    AccountMeta(account3, isSigner = true, isWritable = true),
+                    AccountMeta(programId, isSigner = false, isWritable = false)
+                ),
+                byteArrayOf()
+            ))
+            .setRecentBlockhash(blockhash)
+            .build()
+
+        // then
+        assertEquals(expectedMessage, message)
+    }
+
+    @Test
+    fun testBuildMessageWithTriplicateAccountMeta() {
+        // given
+        val account1 = SolanaPublicKey.from("11111111111111111111111111111111")
+        val account2 = SolanaPublicKey.from("22222222222222222222222222222222222222222222")
+        val account3 = SolanaPublicKey.from("33333333333333333333333333333333333333333333")
+        val programId = SolanaPublicKey.from("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr")
+        val blockhash = Blockhash(ByteArray(32))
+        val expectedMessage = LegacyMessage(
+            signatureCount = 1.toUByte(), // 1 signer
+            readOnlyAccounts = 0u,
+            readOnlyNonSigners = 1u,
+            accounts = listOf(
+                account3, // payer must go first
+                account1,
+                account2,
+                programId
+            ),
+            blockhash = blockhash,
+            instructions = listOf(
+                Instruction(
+                    programIdIndex = 3u,
+                    accountIndices = byteArrayOf(1, 2, 0, 0, 0, 3),
+                    data = byteArrayOf()
+                )
+            )
+        )
+
+        // when
+        val message = Message.Builder()
+            .addInstruction(TransactionInstruction(
+                programId,
+                listOf(
+                    AccountMeta(account1, isSigner = false, isWritable = true),
+                    AccountMeta(account2, isSigner = false, isWritable = true),
+                    AccountMeta(account3, isSigner = false, isWritable = false),
+                    AccountMeta(account3, isSigner = true, isWritable = true),
+                    AccountMeta(account3, isSigner = true, isWritable = false),
+                    AccountMeta(programId, isSigner = false, isWritable = false)
+                ),
+                byteArrayOf()
+            ))
+            .setRecentBlockhash(blockhash)
+            .build()
+
+        // then
+        assertEquals(expectedMessage, message)
     }
 }
