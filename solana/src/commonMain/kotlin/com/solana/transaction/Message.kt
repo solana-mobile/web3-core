@@ -3,6 +3,7 @@ package com.solana.transaction
 import com.solana.publickey.SolanaPublicKey
 import com.solana.publickey.SolanaPublicKeySerializer
 import com.solana.serialization.TransactionFormat
+import com.solana.signer.Signer
 import kotlinx.serialization.*
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.descriptors.SerialDescriptor
@@ -32,11 +33,16 @@ sealed class Message {
 
     data class Builder(
         val instructions: MutableList<TransactionInstruction> = mutableListOf(),
-        var blockhash: Blockhash? = null
+        var blockhash: Blockhash? = null,
+        var feePayer: SolanaPublicKey? = null,
     ) {
 
         fun addInstruction(instruction: TransactionInstruction) = apply {
             instructions.add(instruction)
+        }
+
+        fun addFeePayer(feePayer: SolanaPublicKey) = apply {
+            this.feePayer = feePayer
         }
 
         fun setRecentBlockhash(blockhash: String) = setRecentBlockhash(Blockhash.from(blockhash))
@@ -51,6 +57,7 @@ sealed class Message {
             val writableNonSigners = mutableSetOf<SolanaPublicKey>()
             val readOnlyNonSigners = mutableSetOf<SolanaPublicKey>()
             val programIds = mutableSetOf<SolanaPublicKey>()
+            feePayer?.apply { writableSigners.add(this) }
             instructions.forEach { instruction ->
                 instruction.accounts.forEach { account ->
                     if (account.isSigner) {
@@ -62,6 +69,10 @@ sealed class Message {
                     }
                 }
                 programIds.add(instruction.programId)
+            }
+
+            check(writableSigners.isNotEmpty()) {
+                "Invalid transaction message: no fee payer was provided and no instruction contains a writable signer."
             }
 
             val signers = writableSigners + readOnlySigners
@@ -78,8 +89,8 @@ sealed class Message {
 
             return LegacyMessage(
                 signers.size.toUByte(),
-                readOnlySigners.size.toUByte(),
-                readOnlyNonSigners.size.toUByte(),
+                readOnlySigners.count { it !in signers }.toUByte(),
+                readOnlyNonSigners.count { it !in signers && it !in readOnlySigners }.toUByte(),
                 accounts.toList(),
                 blockhash!!,
                 compiledInstructions
@@ -154,3 +165,8 @@ object MessageSerializer : KSerializer<Message> {
 }
 
 fun Message.toUnsignedTransaction(): Transaction = Transaction(this)
+suspend fun Message.Builder.buildSignedTransaction(vararg signers: Signer) = build().toSignedTransaction(*signers)
+suspend fun Message.toSignedTransaction(vararg signers: Signer): Transaction {
+    val serializedMessage = serialize()
+    return Transaction(signers.map { it.signPayload(serializedMessage).getOrThrow() }, this)
+}
