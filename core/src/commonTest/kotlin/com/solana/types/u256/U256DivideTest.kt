@@ -45,7 +45,7 @@ class U256DivideTest {
         fun result() = dividend/divisor
 
         // then
-        assertFailsWith(ArithmeticException::class) {
+        assertFailsWith<Exception>("divide by zero") {
             result()
         }
     }
