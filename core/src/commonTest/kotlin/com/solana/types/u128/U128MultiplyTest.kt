@@ -49,4 +49,18 @@ class U128MultiplyTest {
         // then
         assertEquals(expectedResult, product)
     }
+
+    @Test
+    fun `multiplying U128 value by 0 produces 0`() {
+        // given
+        val value1 = U128.parse("76432623462")
+        val value2 = U128.parse("0")
+        val expectedResult = U256.parse("0")
+
+        // when
+        val product = value1*value2
+
+        // then
+        assertEquals(expectedResult, product)
+    }
 }
