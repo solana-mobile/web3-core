@@ -9,75 +9,77 @@ import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 
-@Serializable(with = U128Serializer::class)
-class U128 : Number, Comparable<U128> {
+@Serializable(with=U256Serializer::class)
+class U256 : Number, Comparable<U256> {
     companion object {
         /**
-         * A constant holding the minimum value an instance of U128 can have.
+         * A constant holding the minimum value an instance of U256 can have.
          */
-        val MIN_VALUE: U128 = U128(ByteArray(SIZE_BYTES) { 0 })
+        val MIN_VALUE: U256 = U256(ByteArray(SIZE_BYTES) { 0 })
 
         /**
-         * A constant holding the maximum value an instance of U128 can have.
+         * A constant holding the maximum value an instance of U256 can have.
          */
-        val MAX_VALUE: U128 = U128(ByteArray(SIZE_BYTES) { -1 })
+        val MAX_VALUE: U256 = U256(ByteArray(SIZE_BYTES) { -1 })
 
         /**
-         * A constant holding the maximum decimal value an instance of U128 can have,
+         * A constant holding the maximum decimal value an instance of U256 can have,
          * represented as a String.
          */
-        const val MAX_VALUE_DECIMAL = "340282366920938463463374607431768211455"
+        const val MAX_VALUE_DECIMAL = "115792089237316195423570985008687907853269984665640564039457584007913129639935"
 
         /**
-         * The number of bytes used to represent an instance of U128 in a binary form.
+         * The number of bytes used to represent an instance of U256 in a binary form.
          */
-        const val SIZE_BYTES: Int = 16
+        const val SIZE_BYTES: Int = 32
 
         /**
-         * The number of bits used to represent an instance of U128 in a binary form.
+         * The number of bits used to represent an instance of U256 in a binary form.
          */
-        const val SIZE_BITS: Int = 128
+        const val SIZE_BITS: Int = 256
 
-        fun parse(string: String): U128 {
+        fun parse(string: String): U256 {
             // Remove underscores and trailing 'n'/'u' character that are sometimes preset in numeric literals
             val string = string.replace(Regex("(_|n$|u$)"), "")
-            require(string.isNotEmpty()) { "Invalid U128 String: Empty string" }
-            require(string.all { it in '0'..'9' }) { "Invalid U128 String: Non-digit character" }
-            require(string.length <= 39) { "Invalid U128 String: Too many digits for U128" }
-            if (string.length == 39) require(string <= MAX_VALUE_DECIMAL) {
-                "Invalid U128 String: Value exceeds U128 max"
+            require(string.isNotEmpty()) { "Invalid U256 String: Empty string" }
+            require(string.all { it in '0'..'9' }) { "Invalid U256 String: Non-digit character" }
+            require(string.length <= 78) { "Invalid U256 String: Too many digits for U256" }
+            if (string.length == 78) require(string <= MAX_VALUE_DECIMAL) {
+                "Invalid U256 String: Value exceeds U256 max"
             }
 
             // decode the string as a MultiBase Encoded Base10 String
             return fromBigEndian(MultiBase.decode("9$string"))
         }
 
-        fun fromBigEndian(bytes: ByteArray): U128 {
+        fun fromBigEndian(bytes: ByteArray): U256 {
             require(bytes.size <= SIZE_BYTES)
             val padded = ByteArray(SIZE_BYTES)
             // copy into the right end (big‑endian)
             bytes.copyInto(padded, SIZE_BYTES - bytes.size)
-            return U128(padded.reversedArray()) // store little‑endian internally
+            return U256(padded.reversedArray()) // store little‑endian internally
         }
 
-        fun fromLittleEndian(bytes: ByteArray): U128 {
+        fun fromLittleEndian(bytes: ByteArray): U256 {
             require(bytes.size <= SIZE_BYTES)
             val padded = ByteArray(SIZE_BYTES)
             // copy into the left end (little‑endian)
             bytes.copyInto(padded, 0)
-            return U128(padded) // store little‑endian internally
+            return U256(padded) // store little‑endian internally
         }
     }
 
     private val bytes: ByteArray
 
     private constructor(bytes: ByteArray) {
-        require(bytes.size == SIZE_BYTES)
+        require(bytes.size == 32)
         this.bytes = bytes
     }
 
     fun toByteArray(bigEndian: Boolean = false) =
-        if (bigEndian) bytes.reversedArray() else bytes
+        if (bigEndian) bytes.reversedArray() else bytes.copyOf()
+
+    fun toU128(): U128 = U128.fromLittleEndian(bytes.copyOfRange(0, SIZE_BYTES))
 
     override fun toDouble(): Double {
         // Use high precision path: convert to BigDecimal-like via division
@@ -107,8 +109,8 @@ class U128 : Number, Comparable<U128> {
         return (getULong(0) and 0xFFu).toByte()
     }
 
-    override fun compareTo(other: U128): Int {
-        for (i in 15 downTo 0) {
+    override fun compareTo(other: U256): Int {
+        for (i in SIZE_BYTES-1 downTo 0) {
             val a = bytes[i].toInt() and 0xFF
             val b = other.bytes[i].toInt() and 0xFF
             if (a != b) return a.compareTo(b)
@@ -124,7 +126,7 @@ class U128 : Number, Comparable<U128> {
         if (this === other) return true
         if (other == null || this::class != other::class) return false
 
-        other as U128
+        other as U256
 
         return bytes.contentEquals(other.bytes)
     }
@@ -139,38 +141,7 @@ class U128 : Number, Comparable<U128> {
         }
     }
 
-    operator fun times(other: U128): U256 {
-        val result = ByteArray(U256.SIZE_BYTES) // product can be up to 256 bytes
-        val temp = IntArray(U256.SIZE_BYTES)    // use Ints for intermediate sums
-
-        val a = toByteArray().copyOf()
-        val b = other.toByteArray().copyOf()
-
-        for (i in a.indices) {
-            for (j in b.indices) {
-                val ai = a[i].toInt() and 0xFF
-                val bj = b[j].toInt() and 0xFF
-                val pos = i + j
-
-                var carry = ai * bj
-                var k = pos
-                while (carry > 0) {
-                    carry += temp[k]
-                    temp[k] = carry and 0xFF
-                    carry = carry ushr 8
-                    k++
-                }
-            }
-        }
-
-        for (i in result.indices) {
-            result[i] = temp[i].toByte()
-        }
-
-        return U256.fromLittleEndian(result)
-    }
-
-    operator fun div(divisor: Long): U128 =
+    operator fun div(divisor: Long): U256 =
         parse(divideBase10StringByLong(toString(), divisor))
 
     private fun getULong(offset: Int): ULong {
@@ -182,11 +153,11 @@ class U128 : Number, Comparable<U128> {
     }
 }
 
-private class U128Serializer : KSerializer<U128> {
+private class U256Serializer : KSerializer<U256> {
     override val descriptor =
-        PrimitiveSerialDescriptor("U128", PrimitiveKind.STRING)
+        PrimitiveSerialDescriptor("U256", PrimitiveKind.STRING)
 
-    override fun serialize(encoder: Encoder, value: U128) {
+    override fun serialize(encoder: Encoder, value: U256) {
         when (encoder) {
             is com.funkatronics.kborsh.BorshEncoder -> {
                 value.toByteArray().forEach {
@@ -197,15 +168,18 @@ private class U128Serializer : KSerializer<U128> {
         }
     }
 
-    override fun deserialize(decoder: Decoder): U128 {
+    override fun deserialize(decoder: Decoder): U256 {
         return when (decoder) {
             is com.funkatronics.kborsh.BorshDecoder -> {
-                val bytes = ByteArray(U128.SIZE_BYTES) {
+                val bytes = ByteArray(U256.SIZE_BYTES) {
                     decoder.decodeByte()
                 }
-                U128.fromLittleEndian(bytes)
+                U256.fromLittleEndian(bytes)
             }
-            else -> U128.parse(decoder.decodeString())
+            else -> U256.parse(decoder.decodeString())
         }
     }
 }
+
+operator fun U256.div(divisor: Long): U256 =
+    U256.parse(divideBase10StringByLong(toString(), divisor))
