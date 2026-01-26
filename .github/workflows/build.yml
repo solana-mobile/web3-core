@@ -32,6 +32,7 @@ jobs:
       - name: Install Solana
         uses: ./.github/actions/install-solana
         with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           solana_version: ${{ matrix.solana }}
 
       - name: Start local validator
