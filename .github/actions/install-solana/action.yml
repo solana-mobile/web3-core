@@ -1,32 +1,64 @@
-name: Install Solana Validator
-description: Install a local solana validator for testing
+name: Install Local Solana Validator
+description: Installs and caches the specified solana validator version.
 
 inputs:
+  github-token:
+    description: 'GitHub token for API access'
+    required: true
   solana_version:
-    description: Version of Solana to install
+    description: Version of Solana to install. Numeric version like "1.2.3" are supported, as well as "stable" for the latest release
     required: true
 
 runs:
   using: "composite"
   steps:
+    - name: Get Solana Version
+      id: get-solana-version
+      run: |
+        if [ "${{ inputs.solana_version }}" = "stable" ]; then
+          echo "Resolving stable version from GitHub API..."
+          release_json=$(\
+            curl -s \
+            -H "Authorization: Bearer ${{ inputs.github-token }}" \
+            -H "Accept: application/json" \
+            https://api.github.com/repos/anza-xyz/agave/releases/latest \
+          )
+          release=$( echo "$release_json" | grep -m 1 '"tag_name"' | sed -ne 's/.*"tag_name": "\([^"]*\)".*/\1/p')
+          release="${release#v}"
+          echo "Using resolved version: $release"
+        else
+          release="${{ inputs.solana_version }}"
+          echo "Using direct version: $release"
+        fi
+        
+        if [ -z "$release" ]; then
+          echo "❌ Failed to resolve solana version:"
+          echo "${{ inputs.solana_version }}"
+          exit 1
+        fi
+        
+        echo "✅ Resolved version: $release"
+        echo "resolved_version=$release" >> $GITHUB_OUTPUT
+      shell: bash
+
     - name: Cache Solana Install
       if: ${{ !env.ACT }}
       id: cache-solana-install
       uses: actions/cache@v4
       with:
-        path: "$HOME/.local/share/solana/install/releases/${{ inputs.solana_version }}"
-        key: ${{ runner.os }}-Solana-v${{ inputs.solana_version  }}
+        path: "$HOME/.local/share/solana/install/releases/${{ steps.get-solana-version.outputs.resolved_version }}"
+        key: ${{ runner.os }}-Solana-v${{ steps.get-solana-version.outputs.resolved_version }}
 
     - name: Install Solana
       if: ${{ !env.ACT }} && steps.cache-solana-install.cache-hit != 'true'
       run: |
-        sh -c "$(curl -sSfL https://release.anza.xyz/v${{ inputs.solana_version }}/install)"
+        sh -c "$(curl -sSfL https://release.anza.xyz/v${{ steps.get-solana-version.outputs.resolved_version }}/install)"
       shell: bash
 
     - name: Set Active Solana Version
       run: |
         rm -f "$HOME/.local/share/solana/install/active_release"
-        ln -s "$HOME/.local/share/solana/install/releases/${{ inputs.solana_version }}/solana-release" "$HOME/.local/share/solana/install/active_release"
+        ln -s "$HOME/.local/share/solana/install/releases/${{ steps.get-solana-version.outputs.resolved_version }}/solana-release" "$HOME/.local/share/solana/install/active_release"
       shell: bash
 
     - name: Add Solana bin to Path

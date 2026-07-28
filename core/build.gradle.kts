@@ -30,6 +30,8 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 implementation(libs.kotlinx.serialization.json)
+                implementation(libs.borsh)
+                implementation(libs.multimult)
             }
         }
         val commonTest by getting {

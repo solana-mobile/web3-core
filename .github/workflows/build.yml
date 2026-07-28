@@ -13,7 +13,7 @@ jobs:
     runs-on: macos-latest
     strategy:
       matrix:
-        solana: ["1.18.14"]
+        solana: ["2.0.0", "stable"]
 
     steps:
       - name: Checkout
@@ -32,6 +32,7 @@ jobs:
       - name: Install Solana
         uses: ./.github/actions/install-solana
         with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           solana_version: ${{ matrix.solana }}
 
       - name: Start local validator
