@@ -4,7 +4,6 @@ import com.funkatronics.encoders.Base64
 import com.solana.publickey.SolanaPublicKey
 import com.solana.serialization.TransactionFormat
 import com.solana.util.asVarint
-import kotlin.experimental.or
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
@@ -63,7 +62,7 @@ class TransactionFormatTests {
     }
 
     @Test
-    fun testSerializeVersionedMessage() {
+    fun testSerializeV0Message() {
         // given
         val accounts = listOf(
             SolanaPublicKey(ByteArray(32) {0}),
@@ -79,10 +78,18 @@ class TransactionFormatTests {
         val data = "hello world".encodeToByteArray()
         val instruction = Instruction(programIdIndex, accountAddressIndices, data)
 
-        val message = VersionedMessage(0, 1.toUByte(), 2.toUByte(), 3.toUByte(), accounts, blockhash, listOf(instruction), listOf())
+        val message = V0Message(
+            1.toUByte(),
+            2.toUByte(),
+            3.toUByte(), 
+            blockhash, 
+            accounts,
+            listOf(instruction),
+            listOf()
+        )
 
         val expectedBytes =
-            byteArrayOf(0x80.toByte() or message.version, message.signatureCount.toByte(), message.readOnlyAccounts.toByte(), message.readOnlyNonSigners.toByte()) +
+            byteArrayOf(0x80.toByte(), message.signatureCount.toByte(), message.readOnlyAccounts.toByte(), message.readOnlyNonSigners.toByte()) +
                     4.asVarint() + ByteArray(32) {0} + ByteArray(32) {1} + ByteArray(32) {2} + ByteArray(32) {3} +
                     ByteArray(32) {9} +
                     1.asVarint() + programIdIndex.toInt().asVarint() + byteArrayOf(1, 0) + data.size.asVarint() + data + byteArrayOf(0)
@@ -216,13 +223,12 @@ class TransactionFormatTests {
 
         val accounts = listOf(account, programId)
         val instructions = listOf(Instruction(1u, byteArrayOf(0), data))
-        val memoTxMessage = VersionedMessage(
-            0,
+        val memoTxMessage = V0Message(
             1u,
             0u,
             1u,
-            accounts,
             blockhash,
+            accounts,
             instructions,
             listOf()
         )
@@ -329,7 +335,7 @@ class TransactionFormatTests {
     }
 
     @Test
-    fun testDeserializeVersionedTransaction() {
+    fun testDeserializeV0Transaction() {
         // given
         val account = SolanaPublicKey(Base64.decode("XJy50755nz75BGthIrxe7XIQ9WkcMxgIOCmqEM30qq4"))
         val programId = SolanaPublicKey.from("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr")
@@ -366,13 +372,12 @@ class TransactionFormatTests {
 
         val accounts = listOf(account, programId)
         val instructions = listOf(Instruction(1u, byteArrayOf(0), data))
-        val memoTxMessage = VersionedMessage(
-            0,
+        val memoTxMessage = V0Message(
             1u,
             0u,
             1u,
-            accounts,
             blockhash,
+            accounts,
             instructions,
             listOf()
         )
@@ -384,14 +389,81 @@ class TransactionFormatTests {
         // then
         assertEquals(1, transaction.signatures.size)
         assertContentEquals(signature, transaction.signatures.first())
-        assertEquals(memoTxMessage.version, (transaction.message as VersionedMessage).version)
-        assertEquals(memoTxMessage.signatureCount, (transaction.message as VersionedMessage).signatureCount)
-        assertEquals(memoTxMessage.readOnlyAccounts, (transaction.message as VersionedMessage).readOnlyAccounts)
-        assertEquals(memoTxMessage.readOnlyNonSigners, (transaction.message as VersionedMessage).readOnlyNonSigners)
-        assertContentEquals(memoTxMessage.accounts, (transaction.message as VersionedMessage).accounts)
-        assertEquals(memoTxMessage.blockhash, (transaction.message as VersionedMessage).blockhash)
-        assertContentEquals(memoTxMessage.instructions, (transaction.message as VersionedMessage).instructions)
-        assertContentEquals(memoTxMessage.addressTableLookups, (transaction.message as VersionedMessage).addressTableLookups)
+        assertEquals(memoTxMessage.signatureCount, (transaction.message as V0Message).signatureCount)
+        assertEquals(memoTxMessage.readOnlyAccounts, transaction.message.readOnlyAccounts)
+        assertEquals(memoTxMessage.readOnlyNonSigners, transaction.message.readOnlyNonSigners)
+        assertContentEquals(memoTxMessage.accounts, transaction.message.accounts)
+        assertEquals(memoTxMessage.blockhash, transaction.message.blockhash)
+        assertContentEquals(memoTxMessage.instructions, transaction.message.instructions)
+        assertContentEquals(memoTxMessage.addressTableLookups, transaction.message.addressTableLookups)
+
+        assertContentEquals(memoTransactionBytes, transactionBytes)
+    }
+
+    @Test
+    fun testDeserializeV1Transaction() {
+        // given
+        val account = SolanaPublicKey(Base64.decode("XJy50755nz75BGthIrxe7XIQ9WkcMxgIOCmqEM30qq4"))
+        val programId = SolanaPublicKey.from("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr")
+        val blockhash = Blockhash(ByteArray(32))
+        val signature = ByteArray(64)
+        val data = "hello world ".encodeToByteArray()
+
+        val memoTransactionBytes =
+            byteArrayOf(0x81.toByte()) + // prefix 0b10000001
+            byteArrayOf( // header
+                0x01.toByte(), // 1 signature required (fee payer)
+                0x00.toByte(), // 0 read-only account signatures
+                0x01.toByte(), // 1 read-only account not requiring a signature
+            ) +
+            byteArrayOf( // config mask
+                0x00.toByte(),
+                0x00.toByte(),
+                0x00.toByte(),
+                0x00.toByte(),
+            ) +
+            blockhash.bytes + // blockhash
+            1.toByte() + // num instructions
+            2.toByte() + // num accounts
+            account.bytes + programId.bytes + // accounts
+            // config values (none)
+            //region instructions
+            byteArrayOf( // headers (1 ix -> 4 bytes)
+                0x01.toByte(), // program ID (index into list of accounts)
+                0x01.toByte(), // 1 account
+                0x0C.toByte(), 0x00.toByte(), // 12 byte payload, u16
+            ) +
+            0x00.toByte() + data + // memo ix: account index 0 + data
+            //endregion
+            // signature
+            signature
+
+        val accounts = listOf(account, programId)
+        val instructions = listOf(Instruction(1u, byteArrayOf(0), data))
+        val memoTxMessage = V1Message(
+            1u,
+            0u,
+            1u,
+            blockhash,
+            accounts,
+            instructions,
+            TransactionConfig()
+        )
+
+        // when
+        val transaction = TransactionFormat.decodeFromByteArray(Transaction.serializer(), memoTransactionBytes)
+        val transactionBytes = TransactionFormat.encodeToByteArray(Transaction.serializer(), transaction)
+
+        // then
+        assertEquals(1, transaction.signatures.size)
+        assertContentEquals(signature, transaction.signatures.first())
+        assertEquals(memoTxMessage.signatureCount, (transaction.message as V1Message).signatureCount)
+        assertEquals(memoTxMessage.readOnlyAccounts, transaction.message.readOnlyAccounts)
+        assertEquals(memoTxMessage.readOnlyNonSigners, transaction.message.readOnlyNonSigners)
+        assertContentEquals(memoTxMessage.accounts, transaction.message.accounts)
+        assertEquals(memoTxMessage.blockhash, transaction.message.blockhash)
+        assertContentEquals(memoTxMessage.instructions, transaction.message.instructions)
+        assertEquals(memoTxMessage.config, transaction.message.config)
 
         assertContentEquals(memoTransactionBytes, transactionBytes)
     }
