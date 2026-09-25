@@ -13,7 +13,6 @@ import kotlinx.serialization.encoding.Encoder
 object SignatureSerializer : ByteStringSerializer(Transaction.SIGNATURE_LENGTH_BYTES)
 
 @Serializable(TransactionSerializer::class)
-@OptIn(ExperimentalSerializationApi::class)
 data class Transaction(
     val signatures: List<@Serializable(with = SignatureSerializer::class) ByteArray>,
     @Serializable(with = MessageSerializer::class) val message: Message
@@ -30,7 +29,7 @@ data class Transaction(
     fun serialize(): ByteArray = TransactionFormat.encodeToByteArray(serializer(), this)
 }
 
-@ExperimentalSerializationApi
+@OptIn(ExperimentalSerializationApi::class)
 object TransactionSerializer : KSerializer<Transaction> {
     override val descriptor: SerialDescriptor =
         buildClassSerialDescriptor("com.solana.transaction.Transaction")

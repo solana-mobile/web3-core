@@ -14,7 +14,7 @@ import kotlinx.serialization.encoding.CompositeEncoder
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.modules.EmptySerializersModule
 
-@ExperimentalSerializationApi
+@OptIn(ExperimentalSerializationApi::class)
 sealed class TransactionFormat : BinaryFormat {
 
     companion object Default : TransactionFormat()
@@ -30,7 +30,7 @@ sealed class TransactionFormat : BinaryFormat {
 }
 
 @ExperimentalSerializationApi
-class TransactionEncoder : AbstractEncoder() {
+internal class TransactionEncoder : AbstractEncoder() {
     private val bytes = mutableListOf<Byte>()
 
     val encodedBytes get() = bytes.toByteArray()
@@ -58,7 +58,7 @@ class TransactionEncoder : AbstractEncoder() {
 }
 
 @ExperimentalSerializationApi
-class TransactionDecoder(val bytes: ByteArray) : AbstractDecoder() {
+internal class TransactionDecoder(val bytes: ByteArray) : AbstractDecoder() {
     private var position = 0
 
     override val serializersModule = EmptySerializersModule()
@@ -101,16 +101,6 @@ class TransactionDecoder(val bytes: ByteArray) : AbstractDecoder() {
 
     companion object {
         fun decodeCompactU16(decoder: Decoder, peekedByte: Byte? = null): Int {
-//        var size = 0
-//        var shift = 0
-//        do {
-//            val b = (if (shift == 0 && peekedByte != null) peekedByte else decoder.decodeByte()).toInt() and 0xFF
-//            size = ((b and 0x7f) shl shift) or size
-//            shift += 7
-//        } while (b and 0x80 != 0)
-//
-//        return size
-
             var count = 0
             val bytes = ByteArray(3)
             do {
