@@ -256,7 +256,7 @@ class TransactionTests {
             transactionBytes.slice(blockhashOffset until blockhashOffset + SolanaPublicKey.PUBLIC_KEY_LENGTH)
         )
 
-        assertEquals(memoTransactionTemplate[8 + 32].toInt(), memoTxMessage.instructions.size) // number of accounts
+        assertEquals(memoTransactionTemplate[8 + 32].toInt(), memoTxMessage.instructions.size) // number of instructions
         assertEquals(memoTransactionTemplate[8 + 32 + 1].toInt(), memoTxMessage.accounts.size) // number of accounts
 
         assertNull(memoTxMessage.config.priorityFeeLamports)
@@ -284,5 +284,114 @@ class TransactionTests {
         assertContentEquals(memoTransactionTemplate.takeLast(signature.size), transactionBytes.takeLast(signature.size))
 
         assertContentEquals(memoTransactionTemplate, transactionBytes)
+    }
+
+    @Test
+    fun testV1TransactionWithConfigValues() {
+        // given
+        val account = SolanaPublicKey(Base64.decode("XJy50755nz75BGthIrxe7XIQ9WkcMxgIOCmqEM30qq4"))
+        val programId = SolanaPublicKey.from("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr")
+        val blockhash = Blockhash(ByteArray(32))
+        val signature = ByteArray(64) {7}
+        val data = "hello world ".encodeToByteArray()
+        val config = TransactionConfig(
+            priorityFeeLamports = 5_000uL,
+            computeUnitLimit = 200_000u,
+            loadedAccountsDataSizeLimit = 65_536u,
+            requestedHeapSize = 262_144u,
+        )
+
+        val memoTransactionTemplate =
+            byteArrayOf(0x81.toByte()) + // prefix 0b10000001
+            byteArrayOf(0x01, 0x00, 0x01) + // header
+            byteArrayOf(0x1F, 0x00, 0x00, 0x00) + // config mask: priority fee (0x03) | CU limit (0x04) | loaded data size (0x08) | heap size (0x10)
+            blockhash.bytes +
+            byteArrayOf(0x01, 0x02) + // 1 instruction, 2 accounts
+            account.bytes + programId.bytes +
+            byteArrayOf(0x88.toByte(), 0x13, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00) + // priority fee 5000 (u64)
+            byteArrayOf(0x40, 0x0D, 0x03, 0x00) + // compute unit limit 200000 (u32)
+            byteArrayOf(0x00, 0x00, 0x01, 0x00) + // loaded accounts data size limit 65536 (u32)
+            byteArrayOf(0x00, 0x00, 0x04, 0x00) + // requested heap size 262144 (u32)
+            byteArrayOf(0x01, 0x01, 0x0C, 0x00) + // ix header: program id index 1, 1 account, 12 byte payload (u16)
+            byteArrayOf(0x00) + data + // ix payload: account index 0 + data
+            signature
+
+        val memoTxMessage = V1Message(
+            1u,
+            0u,
+            1u,
+            blockhash,
+            listOf(account, programId),
+            listOf(Instruction(1u, byteArrayOf(0), data)),
+            config
+        )
+        val transaction = Transaction(listOf(signature), memoTxMessage)
+
+        // when
+        val transactionBytes = TransactionFormat.encodeToByteArray(Transaction.serializer(), transaction)
+        val decodedTransaction = TransactionFormat.decodeFromByteArray(Transaction.serializer(), memoTransactionTemplate)
+
+        // then
+        assertContentEquals(memoTransactionTemplate, transactionBytes)
+
+        assertEquals(1, decodedTransaction.signatures.size)
+        assertContentEquals(signature, decodedTransaction.signatures.first())
+        assertEquals(config, (decodedTransaction.message as V1Message).config)
+        assertContentEquals(memoTxMessage.accounts, decodedTransaction.message.accounts)
+        assertContentEquals(memoTxMessage.instructions, decodedTransaction.message.instructions)
+    }
+
+    @Test
+    fun testV1TransactionWithMultipleInstructionsAndSignatures() {
+        // given
+        val signer1 = SolanaPublicKey(ByteArray(32) {1})
+        val signer2 = SolanaPublicKey(ByteArray(32) {2})
+        val programId = SolanaPublicKey.from("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr")
+        val blockhash = Blockhash(ByteArray(32))
+        val signature1 = ByteArray(64) {1}
+        val signature2 = ByteArray(64) {2}
+        val data1 = "hello".encodeToByteArray()
+        val data2 = "world!".encodeToByteArray()
+
+        val memoTransactionTemplate =
+            byteArrayOf(0x81.toByte()) + // prefix 0b10000001
+            byteArrayOf(0x02, 0x00, 0x01) + // header: 2 signatures, 0 read-only signed, 1 read-only unsigned
+            byteArrayOf(0x00, 0x00, 0x00, 0x00) + // config mask
+            blockhash.bytes +
+            byteArrayOf(0x02, 0x03) + // 2 instructions, 3 accounts
+            signer1.bytes + signer2.bytes + programId.bytes +
+            byteArrayOf(0x02, 0x01, 0x05, 0x00) + // ix 1 header: program id index 2, 1 account, 5 byte payload (u16)
+            byteArrayOf(0x02, 0x01, 0x06, 0x00) + // ix 2 header: program id index 2, 1 account, 6 byte payload (u16)
+            byteArrayOf(0x00) + data1 + // ix 1 payload: account index 0 + data
+            byteArrayOf(0x01) + data2 + // ix 2 payload: account index 1 + data
+            signature1 + signature2
+
+        val memoTxMessage = V1Message(
+            2u,
+            0u,
+            1u,
+            blockhash,
+            listOf(signer1, signer2, programId),
+            listOf(
+                Instruction(2u, byteArrayOf(0), data1),
+                Instruction(2u, byteArrayOf(1), data2)
+            ),
+            TransactionConfig()
+        )
+        val transaction = Transaction(listOf(signature1, signature2), memoTxMessage)
+
+        // when
+        val transactionBytes = TransactionFormat.encodeToByteArray(Transaction.serializer(), transaction)
+        val decodedTransaction = TransactionFormat.decodeFromByteArray(Transaction.serializer(), memoTransactionTemplate)
+
+        // then
+        assertContentEquals(memoTransactionTemplate, transactionBytes)
+
+        assertEquals(2, decodedTransaction.signatures.size)
+        assertContentEquals(signature1, decodedTransaction.signatures[0])
+        assertContentEquals(signature2, decodedTransaction.signatures[1])
+        assertEquals(memoTxMessage.signatureCount, decodedTransaction.message.signatureCount)
+        assertContentEquals(memoTxMessage.accounts, decodedTransaction.message.accounts)
+        assertContentEquals(memoTxMessage.instructions, decodedTransaction.message.instructions)
     }
 }

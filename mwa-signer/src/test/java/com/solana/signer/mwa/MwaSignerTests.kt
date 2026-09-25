@@ -18,6 +18,7 @@ import org.mockito.kotlin.*
 import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
@@ -168,6 +169,44 @@ class MwaSignerTests {
         assertTrue {
             Ed25519.verify(result.getOrNull()!!.signatures.first(), signer.publicKey.bytes,
                 result.getOrNull()!!.message.serialize())
+        }
+    }
+
+    @Test
+    fun `Mwa Signer signs multi-signer transaction`() = runTest {
+        // given
+        val signer = MwaSigner(mobileWalletAdapter, sender)
+        val otherSigner = SolanaPublicKey(Base64.decode("XJy50755nz75BGthIrxe7XIQ9WkcMxgIOCmqEM30qq4"))
+        val programId = SolanaPublicKey.from("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr")
+        val blockhash = Blockhash(ByteArray(32))
+        val data = "hello world ".encodeToByteArray()
+
+        val memoInstruction = TransactionInstruction(
+            programId,
+            listOf(
+                AccountMeta(signer.publicKey, true, true),
+                AccountMeta(otherSigner, true, true)
+            ),
+            data
+        )
+
+        val message = Message.Builder()
+            .addInstruction(memoInstruction)
+            .setRecentBlockhash(blockhash)
+            .build()
+
+        val transaction = Transaction(message)
+
+        // when
+        val result = signer.signTransaction(transaction)
+
+        // then
+        assertTrue { result.isSuccess }
+        val signedTransaction = result.getOrThrow()
+        signedTransaction.serialize()
+        assertEquals(2, signedTransaction.signatures.size)
+        signedTransaction.signatures.forEach {
+            assertEquals(Transaction.SIGNATURE_LENGTH_BYTES, it.size)
         }
     }
 }

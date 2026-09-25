@@ -60,8 +60,8 @@ class MessageTests {
             //region sign data
             byteArrayOf(
                 0x01.toByte(), // 1 signature required (fee payer)
-                0x00.toByte(), // 0 read-only account signatures
-                0x00.toByte(), // 0 read-only account not requiring a signature
+                0x00.toByte(), // 0 read-only accounts signatures
+                0x01.toByte(), // 1 read-only account not requiring a signature
                 0x02.toByte(), // 2 accounts
             ) + account.bytes + programId.bytes + blockhash.bytes +
             //endregion
@@ -366,5 +366,56 @@ class MessageTests {
 
         // then
         assertEquals(expectedMessage, message)
+    }
+
+    @Test
+    fun testBuildMessageCountsProgramIdsAsReadOnlyNonSigners() {
+        // given
+        val payer = SolanaPublicKey.from("33333333333333333333333333333333333333333333")
+        val sysvar = SolanaPublicKey.from("SysvarC1ock11111111111111111111111111111111")
+        val programId = SolanaPublicKey.from("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr")
+        val blockhash = Blockhash(ByteArray(32))
+
+        // when
+        val message = Message.Builder()
+            .addInstruction(TransactionInstruction(
+                programId,
+                listOf(AccountMeta(sysvar, isSigner = false, isWritable = false)),
+                byteArrayOf()
+            ))
+            .setRecentBlockhash(blockhash)
+            .addFeePayer(payer)
+            .build()
+
+        // then
+        assertEquals(listOf(payer, sysvar, programId), message.accounts)
+        assertEquals(1.toUByte(), message.signatureCount)
+        assertEquals(0.toUByte(), message.readOnlyAccounts)
+        assertEquals(2.toUByte(), message.readOnlyNonSigners) // sysvar + program id
+    }
+
+    @Test
+    fun testBuildMessageCountsReadOnlySigners() {
+        // given
+        val payer = SolanaPublicKey.from("33333333333333333333333333333333333333333333")
+        val readOnlySigner = SolanaPublicKey.from("22222222222222222222222222222222222222222222")
+        val programId = SolanaPublicKey.from("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr")
+        val blockhash = Blockhash(ByteArray(32))
+
+        // when
+        val message = Message.Builder()
+            .addInstruction(TransactionInstruction(
+                programId,
+                listOf(AccountMeta(readOnlySigner, isSigner = true, isWritable = false)),
+                byteArrayOf()
+            ))
+            .setRecentBlockhash(blockhash)
+            .addFeePayer(payer)
+            .build()
+
+        // then
+        assertEquals(listOf(payer, readOnlySigner, programId), message.accounts)
+        assertEquals(2.toUByte(), message.signatureCount)
+        assertEquals(1.toUByte(), message.readOnlyAccounts)
     }
 }

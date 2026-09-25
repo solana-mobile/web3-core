@@ -16,8 +16,6 @@ import kotlinx.serialization.encoding.Encoder
 typealias Blockhash = SolanaPublicKey
 val Blockhash.blockhash get() = this.bytes
 
-enum class Version { LEGACY, V0, V1 }
-
 @OptIn(ExperimentalSerializationApi::class)
 sealed class Message {
 
@@ -79,7 +77,9 @@ sealed class Message {
             }
 
             val signers = writableSigners + readOnlySigners
-            val accounts = signers + writableNonSigners + readOnlyNonSigners + programIds
+            val writable = writableSigners + writableNonSigners
+            val accounts = (signers + writableNonSigners + readOnlyNonSigners + programIds)
+                .sortedWith(compareBy({ it !in signers }, { it !in writable }))
             val compiledInstructions = instructions.map { instruction ->
                 Instruction(
                     accounts.indexOf(instruction.programId).toUByte(),
@@ -92,8 +92,8 @@ sealed class Message {
 
             return LegacyMessage(
                 signers.size.toUByte(),
-                readOnlySigners.count { it !in signers }.toUByte(),
-                readOnlyNonSigners.count { it !in signers && it !in readOnlySigners }.toUByte(),
+                signers.count { it !in writable }.toUByte(),
+                accounts.count { it !in signers && it !in writable }.toUByte(),
                 accounts.toList(),
                 blockhash!!,
                 compiledInstructions

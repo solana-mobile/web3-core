@@ -7,6 +7,7 @@ import com.solana.util.asVarint
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
 class TransactionFormatTests {
 
@@ -186,7 +187,7 @@ class TransactionFormatTests {
     }
 
     @Test
-    fun testSerializeVersionedTransaction() {
+    fun testSerializeV0Transaction() {
         // given
         val account = SolanaPublicKey(Base64.decode("XJy50755nz75BGthIrxe7XIQ9WkcMxgIOCmqEM30qq4"))
         val programId = SolanaPublicKey.from("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr")
@@ -271,6 +272,107 @@ class TransactionFormatTests {
 
         assertEquals(12, transactionBytes[instructionOffset + 4]) // data length
         assertContentEquals(data, transactionBytes.sliceArray(instructionOffset + 5 .. instructionOffset + 4 + 12))
+
+        assertContentEquals(memoTransactionTemplate, transactionBytes)
+    }
+
+    @Test
+    fun testSerializeV1Transaction() {
+        // given
+        val account = SolanaPublicKey(Base64.decode("XJy50755nz75BGthIrxe7XIQ9WkcMxgIOCmqEM30qq4"))
+        val programId = SolanaPublicKey.from("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr")
+        val blockhash = Blockhash(ByteArray(32))
+        val signature = ByteArray(64)
+        val data = "hello world ".encodeToByteArray()
+
+        val memoTransactionTemplate =
+            byteArrayOf(0x81.toByte()) + // prefix 0b10000001
+            byteArrayOf( // header
+                0x01.toByte(), // 1 signature required (fee payer)
+                0x00.toByte(), // 0 read-only account signatures
+                0x01.toByte(), // 1 read-only account not requiring a signature
+            ) +
+            byteArrayOf( // config mask
+                0x00.toByte(),
+                0x00.toByte(),
+                0x00.toByte(),
+                0x00.toByte(),
+            ) +
+            blockhash.bytes + // blockhash
+            1.toByte() + // num instructions
+            2.toByte() + // num accounts
+            account.bytes + programId.bytes + // accounts
+            // config values (none)
+            //region instructions
+            byteArrayOf( // headers (1 ix -> 4 bytes)
+                0x01.toByte(), // program ID (index into list of accounts)
+                0x01.toByte(), // 1 account
+                0x0C.toByte(), 0x00.toByte(), // 12 byte payload, u16
+            ) +
+            0x00.toByte() + data + // memo ix: account index 0 + data
+            //endregion
+            // signature
+            signature
+
+        val accounts = listOf(account, programId)
+        val instructions = listOf(Instruction(1u, byteArrayOf(0), data))
+        val memoTxMessage = V1Message(
+            1u,
+            0u,
+            1u,
+            blockhash,
+            accounts,
+            instructions,
+            TransactionConfig()
+        )
+
+        val transaction = Transaction(listOf(signature), memoTxMessage)
+
+        // when
+        val transactionBytes = TransactionFormat.encodeToByteArray(Transaction.serializer(), transaction)
+
+        val blockhashOffset = 8
+        val accountsOffset = 8 + 32 + 2
+        val instructionOffset = accountsOffset + 2*SolanaPublicKey.PUBLIC_KEY_LENGTH
+
+        // then
+        assertEquals(memoTransactionTemplate[1].toUByte(), memoTxMessage.signatureCount)
+        assertEquals(memoTransactionTemplate[2].toUByte(), memoTxMessage.readOnlyAccounts)
+        assertEquals(memoTransactionTemplate[3].toUByte(), memoTxMessage.readOnlyNonSigners)
+
+        assertContentEquals(memoTransactionTemplate.slice(4 .. 7), transactionBytes.slice(4 .. 7))
+
+        assertContentEquals(
+            blockhash.bytes.asList(),
+            transactionBytes.slice(blockhashOffset until blockhashOffset + SolanaPublicKey.PUBLIC_KEY_LENGTH)
+        )
+
+        assertEquals(memoTransactionTemplate[8 + 32].toInt(), memoTxMessage.instructions.size) // number of instructions
+        assertEquals(memoTransactionTemplate[8 + 32 + 1].toInt(), memoTxMessage.accounts.size) // number of accounts
+
+        assertNull(memoTxMessage.config.priorityFeeLamports)
+        assertNull(memoTxMessage.config.computeUnitLimit)
+        assertNull(memoTxMessage.config.loadedAccountsDataSizeLimit)
+        assertNull(memoTxMessage.config.requestedHeapSize)
+
+        assertContentEquals(
+            account.bytes.asList(),
+            transactionBytes.slice(accountsOffset until accountsOffset + SolanaPublicKey.PUBLIC_KEY_LENGTH)
+        )
+        assertContentEquals(
+            programId.bytes.asList(),
+            transactionBytes.slice(accountsOffset + SolanaPublicKey.PUBLIC_KEY_LENGTH until instructionOffset)
+        )
+
+        assertEquals(1, transactionBytes[instructionOffset]) // program id index
+        assertEquals(1, transactionBytes[instructionOffset + 1]) // num accounts
+        assertEquals(12, transactionBytes[instructionOffset + 2]) // data len b0
+        assertEquals(0, transactionBytes[instructionOffset + 3]) // data len b1
+
+        assertEquals(0, transactionBytes[instructionOffset + 4]) // account index
+        assertContentEquals(data, transactionBytes.sliceArray(instructionOffset + 5 .. instructionOffset + 4 + 12))
+
+        assertContentEquals(memoTransactionTemplate.takeLast(signature.size), transactionBytes.takeLast(signature.size))
 
         assertContentEquals(memoTransactionTemplate, transactionBytes)
     }
