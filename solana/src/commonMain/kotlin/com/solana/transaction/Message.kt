@@ -258,6 +258,8 @@ object V1MessageSerializer : KSerializer<V1Message> {
         val readOnlyAccounts = decoder.decodeByte().toUByte()
         val readOnlyNonSigners = decoder.decodeByte().toUByte()
         val configMask = decoder.decodeInt()
+        if (configMask and 0xFFE0 > 0) throw SerializationException("Invalid config mask: ${configMask.toString(2)}")
+        if (((configMask + 1) and 0b10) != 0) throw SerializationException("Invalid config mask: partial priority fee bits detected")
         val blockhash = Blockhash(decoder.decodeSerializableValue(SolanaPublicKeySerializer).bytes)
         val numInstructions = decoder.decodeByte().toInt()
         val numAddresses = decoder.decodeByte().toInt()

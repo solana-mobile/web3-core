@@ -107,7 +107,7 @@ class V1MessageTests {
     @Test
     fun testDeserializeV1MessageRejectsPartialPriorityFeeBits() {
         // given:
-        val messageBytes =
+        val messageBytes0 =
             byteArrayOf(0x81.toByte()) + // V1_PREFIX
             byteArrayOf(1, 0, 0) + // header
             byteArrayOf(0x01, 0, 0, 0) + // config mask: bit 0 only (u32 LE)
@@ -120,9 +120,25 @@ class V1MessageTests {
             byteArrayOf(0, 0) + // ix header: data len (u16 LE)
             byteArrayOf(0) // ix payload: account index 0
 
+        val messageBytes1 =
+            byteArrayOf(0x81.toByte()) + // V1_PREFIX
+            byteArrayOf(1, 0, 0) + // header
+            byteArrayOf(0x02, 0, 0, 0) + // config mask: bit 1 only (u32 LE)
+            ByteArray(32) { 0xAB.toByte() } + // lifetime specifier (blockhash)
+            byteArrayOf(1) + // num instructions
+            byteArrayOf(2) + // num addresses
+            ByteArray(32) { 1 } + // fee payer
+            ByteArray(32) { 2 } + // program
+            byteArrayOf(1, 1) + // ix header: program id index, num accounts
+            byteArrayOf(0, 0) + // ix header: data len (u16 LE)
+            byteArrayOf(0) // ix payload: account index 0
+
         // when / then
         assertFailsWith<SerializationException> {
-            Message.from(messageBytes)
+            Message.from(messageBytes0)
+        }
+        assertFailsWith<SerializationException> {
+            Message.from(messageBytes1)
         }
     }
 }
