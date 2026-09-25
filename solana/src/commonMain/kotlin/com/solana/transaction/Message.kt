@@ -8,14 +8,15 @@ import kotlinx.serialization.*
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.buildClassSerialDescriptor
+import kotlinx.serialization.descriptors.elementDescriptors
+import kotlinx.serialization.descriptors.elementNames
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
-import kotlin.experimental.and
-import kotlin.experimental.or
 
 typealias Blockhash = SolanaPublicKey
 val Blockhash.blockhash get() = this.bytes
 
+@OptIn(ExperimentalSerializationApi::class)
 sealed class Message {
 
     abstract val signatureCount: UByte
@@ -76,7 +77,9 @@ sealed class Message {
             }
 
             val signers = writableSigners + readOnlySigners
-            val accounts = signers + writableNonSigners + readOnlyNonSigners + programIds
+            val writable = writableSigners + writableNonSigners
+            val accounts = (signers + writableNonSigners + readOnlyNonSigners + programIds)
+                .sortedWith(compareBy({ it !in signers }, { it !in writable }))
             val compiledInstructions = instructions.map { instruction ->
                 Instruction(
                     accounts.indexOf(instruction.programId).toUByte(),
@@ -89,8 +92,8 @@ sealed class Message {
 
             return LegacyMessage(
                 signers.size.toUByte(),
-                readOnlySigners.count { it !in signers }.toUByte(),
-                readOnlyNonSigners.count { it !in signers && it !in readOnlySigners }.toUByte(),
+                signers.count { it !in writable }.toUByte(),
+                accounts.count { it !in signers && it !in writable }.toUByte(),
                 accounts.toList(),
                 blockhash!!,
                 compiledInstructions
@@ -109,17 +112,35 @@ data class LegacyMessage(
     override val instructions: List<Instruction>
 ) : Message()
 
-@Serializable
-data class VersionedMessage(
-    @Transient val version: Byte = 0,
+@Serializable(V0MessageSerializer::class)
+data class V0Message(
     override val signatureCount: UByte,
     override val readOnlyAccounts: UByte,
     override val readOnlyNonSigners: UByte,
-    override val accounts: List<SolanaPublicKey>,
     override val blockhash: Blockhash,
+    override val accounts: List<SolanaPublicKey>,
     override val instructions: List<Instruction>,
     val addressTableLookups: List<AddressTableLookup>
 ) : Message()
+
+@Serializable(V1MessageSerializer::class)
+data class V1Message(
+    override val signatureCount: UByte,
+    override val readOnlyAccounts: UByte,
+    override val readOnlyNonSigners: UByte,
+    override val blockhash: Blockhash,
+    override val accounts: List<SolanaPublicKey>,
+    override val instructions: List<Instruction>,
+    val config: TransactionConfig
+) : Message()
+
+@Serializable
+data class TransactionConfig(
+    val priorityFeeLamports: ULong? = null,
+    val computeUnitLimit: UInt? = null,
+    val loadedAccountsDataSizeLimit: UInt? = null,
+    val requestedHeapSize: UInt? = null,
+)
 
 @Serializable
 data class AddressTableLookup(
@@ -132,34 +153,190 @@ object MessageSerializer : KSerializer<Message> {
     override val descriptor: SerialDescriptor =
         buildClassSerialDescriptor("com.solana.transaction.Message")
 
+    private val VERSION_PREFIX_MASK = 0x80
+
     override fun deserialize(decoder: Decoder): Message {
         val firstByte = decoder.decodeByte()
-        val version = if (firstByte.toInt() and 0x80 == 0) -1 else firstByte and 0x7f
-        val signatureCount = if (version >= 0) decoder.decodeByte().toUByte() else firstByte.toUByte()
+        val version = if (firstByte.toInt() and VERSION_PREFIX_MASK == 0) -1 else firstByte.toInt() and 0x7f
+        return when(version) {
+            -1 -> decodeLegacy(decoder, firstByte)
+            0 -> decoder.decodeSerializableValue(V0Message.serializer())
+            1 -> decoder.decodeSerializableValue(V1Message.serializer())
+            else -> throw SerializationException("Unknown transaction version: $version")
+        }
+    }
+
+    override fun serialize(encoder: Encoder, value: Message) {
+        when (value) {
+            is LegacyMessage -> encoder.encodeSerializableValue(LegacyMessage.serializer(), value)
+            is V0Message -> encoder.encodeSerializableValue(V0Message.serializer(), value)
+            is V1Message -> encoder.encodeSerializableValue(V1Message.serializer(), value)
+        }
+    }
+
+    private fun decodeLegacy(decoder: Decoder, firstByte: Byte): LegacyMessage {
+        val signatureCount = firstByte.toUByte()
         val readOnlyAccounts = decoder.decodeByte().toUByte()
         val readOnlyNonSigners = decoder.decodeByte().toUByte()
         val accounts = decoder.decodeSerializableValue(ListSerializer(SolanaPublicKeySerializer))
         val blockhash = Blockhash(decoder.decodeSerializableValue(SolanaPublicKeySerializer).bytes)
         val instructions = decoder.decodeSerializableValue(ListSerializer(Instruction.serializer()))
-        return if (version >= 0)
-            VersionedMessage(
-                version,
-                signatureCount, readOnlyAccounts, readOnlyNonSigners,
-                accounts, blockhash, instructions,
-                decoder.decodeSerializableValue(ListSerializer(AddressTableLookup.serializer()))
-            )
-        else
-            LegacyMessage(
-                signatureCount, readOnlyAccounts, readOnlyNonSigners,
-                accounts, blockhash, instructions,
-            )
+        return LegacyMessage(
+            signatureCount, readOnlyAccounts, readOnlyNonSigners,
+            accounts, blockhash, instructions,
+        )
+    }
+}
+
+object V0MessageSerializer : KSerializer<V0Message> {
+    override val descriptor: SerialDescriptor =
+        buildClassSerialDescriptor("com.solana.transaction.V0Message") {
+            LegacyMessage.serializer().descriptor.apply {
+                elementNames.zip(elementDescriptors).toMap().forEach {
+                    element(it.key, it.value)
+                }
+            }
+            element("addressTableLookups", ListSerializer(AddressTableLookup.serializer()).descriptor)
+        }
+
+    private const val VERSION_PREFIX = 0x80.toByte()
+
+    override fun deserialize(decoder: Decoder): V0Message {
+        val firstByte = decoder.decodeByte()
+        val signatureCount = if (firstByte == VERSION_PREFIX) decoder.decodeByte().toUByte() else firstByte.toUByte()
+        val readOnlyAccounts = decoder.decodeByte().toUByte()
+        val readOnlyNonSigners = decoder.decodeByte().toUByte()
+        val accounts = decoder.decodeSerializableValue(ListSerializer(SolanaPublicKeySerializer))
+        val blockhash = Blockhash(decoder.decodeSerializableValue(SolanaPublicKeySerializer).bytes)
+        val instructions = decoder.decodeSerializableValue(ListSerializer(Instruction.serializer()))
+        return V0Message(
+            signatureCount, readOnlyAccounts, readOnlyNonSigners,
+            blockhash, accounts, instructions,
+            decoder.decodeSerializableValue(ListSerializer(AddressTableLookup.serializer()))
+        )
     }
 
-    override fun serialize(encoder: Encoder, value: Message) {
-        if (value is VersionedMessage) encoder.encodeByte(0x80.toByte() or value.version)
-        when (value) {
-            is LegacyMessage -> encoder.encodeSerializableValue(LegacyMessage.serializer(), value)
-            is VersionedMessage -> encoder.encodeSerializableValue(VersionedMessage.serializer(), value)
+    override fun serialize(encoder: Encoder, value: V0Message) {
+        encoder.encodeByte(VERSION_PREFIX)
+        // header
+        encoder.encodeByte(value.signatureCount.toByte())
+        encoder.encodeByte(value.readOnlyAccounts.toByte())
+        encoder.encodeByte(value.readOnlyNonSigners.toByte())
+        // accounts
+        encoder.encodeSerializableValue(ListSerializer(SolanaPublicKeySerializer), value.accounts)
+        // blockhash
+        encoder.encodeSerializableValue(SolanaPublicKeySerializer, value.blockhash)
+        // instructions
+        encoder.encodeSerializableValue(ListSerializer(Instruction.serializer()), value.instructions)
+        // lookup tables
+        encoder.encodeSerializableValue(ListSerializer(AddressTableLookup.serializer()), value.addressTableLookups)
+    }
+}
+
+object V1MessageSerializer : KSerializer<V1Message> {
+    override val descriptor: SerialDescriptor =
+        buildClassSerialDescriptor("com.solana.transaction.Message")
+
+    private const val VERSION_PREFIX = 0x81.toByte()
+
+    @Serializable
+    private data class IxHeader(
+        val programIdIndex: UByte,
+        val numAccounts: UByte,
+        val dataLength: UShort,
+    )
+
+    private val TransactionConfig.mask get() =
+        (priorityFeeLamports?.let { 0x03 } ?: 0) or
+        (computeUnitLimit?.let { 0x04 } ?: 0) or
+        (loadedAccountsDataSizeLimit?.let { 0x08 } ?: 0) or
+        (requestedHeapSize?.let { 0x10 } ?: 0)
+
+    override fun deserialize(decoder: Decoder): V1Message {
+        val firstByte = decoder.decodeByte()
+        val signatureCount = if (firstByte == VERSION_PREFIX) decoder.decodeByte().toUByte() else firstByte.toUByte()
+        val readOnlyAccounts = decoder.decodeByte().toUByte()
+        val readOnlyNonSigners = decoder.decodeByte().toUByte()
+        val configMask = decoder.decodeInt()
+        if (configMask and 0xFFE0 > 0) throw SerializationException("Invalid config mask: ${configMask.toString(2)}")
+        if (((configMask + 1) and 0b10) != 0) throw SerializationException("Invalid config mask: partial priority fee bits detected")
+        val blockhash = Blockhash(decoder.decodeSerializableValue(SolanaPublicKeySerializer).bytes)
+        val numInstructions = decoder.decodeByte().toInt()
+        val numAddresses = decoder.decodeByte().toInt()
+        val addresses = List(numAddresses) {
+            decoder.decodeSerializableValue(SolanaPublicKeySerializer)
+        }
+        val config = TransactionConfig(
+            if (configMask and 0x03 == 0x03) decoder.decodeLong().toULong() else null,
+            if (configMask and 0x04 == 0x04) decoder.decodeInt().toUInt() else null,
+            if (configMask and 0x08 == 0x08) decoder.decodeInt().toUInt() else null,
+            if (configMask and 0x10 == 0x10) decoder.decodeInt().toUInt() else null
+        )
+        val instructionHeaders = List(numInstructions) {
+            decoder.decodeSerializableValue(IxHeader.serializer())
+        }
+        val instructions = instructionHeaders.map { ixHeader ->
+            val accountIndices = ByteArray(ixHeader.numAccounts.toInt()) {
+                decoder.decodeByte()
+            }
+            val data = ByteArray(ixHeader.dataLength.toInt()) {
+                decoder.decodeByte()
+            }
+            Instruction(ixHeader.programIdIndex, accountIndices, data)
+        }
+        return V1Message(
+            signatureCount, readOnlyAccounts, readOnlyNonSigners,
+            blockhash, addresses, instructions, config
+        )
+    }
+
+    override fun serialize(encoder: Encoder, value: V1Message) {
+        encoder.encodeByte(VERSION_PREFIX)
+        // header
+        encoder.encodeByte(value.signatureCount.toByte())
+        encoder.encodeByte(value.readOnlyAccounts.toByte())
+        encoder.encodeByte(value.readOnlyNonSigners.toByte())
+        // config mask
+        encoder.encodeInt(value.config.mask)
+        // blockhash
+        encoder.encodeSerializableValue(SolanaPublicKeySerializer, value.blockhash)
+        // counts
+        encoder.encodeByte(value.instructions.size.toByte())
+        encoder.encodeByte(value.accounts.size.toByte())
+        // accounts
+        value.accounts.forEach {
+            encoder.encodeSerializableValue(SolanaPublicKeySerializer, it)
+        }
+        // config values
+        value.config.priorityFeeLamports?.apply {
+            encoder.encodeLong(this.toLong())
+        }
+        value.config.computeUnitLimit?.apply {
+            encoder.encodeInt(this.toInt())
+        }
+        value.config.loadedAccountsDataSizeLimit?.apply {
+            encoder.encodeInt(this.toInt())
+        }
+        value.config.requestedHeapSize?.apply {
+            encoder.encodeInt(this.toInt())
+        }
+        // instructions
+        value.instructions.forEach { ix ->
+            encoder.encodeSerializableValue(IxHeader.serializer(),
+                IxHeader(
+                    ix.programIdIndex,
+                    ix.accountIndices.size.toUByte(),
+                    ix.data.size.toUShort()
+                )
+            )
+        }
+        value.instructions.forEach { ix ->
+            ix.accountIndices.forEach {
+                encoder.encodeByte(it)
+            }
+            ix.data.forEach {
+                encoder.encodeByte(it)
+            }
         }
     }
 }

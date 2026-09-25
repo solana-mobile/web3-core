@@ -6,6 +6,7 @@ import com.funkatronics.kborsh.BorshEncoder
 import com.solana.serialization.ByteStringSerializer
 import com.solana.serialization.TransactionDecoder
 import com.solana.serialization.TransactionEncoder
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.serializer
@@ -45,6 +46,7 @@ open class SolanaPublicKey(final override val bytes: ByteArray) : PublicKey {
     override fun toString() = address
 }
 
+@OptIn(ExperimentalSerializationApi::class)
 object SolanaPublicKeySerializer : KSerializer<SolanaPublicKey> {
     private val borshDelegate = ByteStringSerializer(SolanaPublicKey.PUBLIC_KEY_LENGTH)
     private val jsonDelegate = String.serializer()

@@ -59,7 +59,7 @@ class MwaSigner(val walletAdapter: MobileWalletAdapter, val sender: ActivityResu
         }
 
         return signPayloadInternal(transactionMessage.serialize()).map { result ->
-            Transaction(MutableList(transactionMessage.signatureCount.toInt()) { ByteArray(ownerLength) }.apply {
+            Transaction(MutableList(transactionMessage.signatureCount.toInt()) { ByteArray(signatureLength) }.apply {
                 set(signerIndex, result.signature)
             }, Message.from(result.payload))
         }

@@ -21,7 +21,7 @@ abstract class SolanaSigner : Ed25519Signer() {
         }
 
         return signPayload(transactionMessage.serialize()).map { signature ->
-            Transaction(MutableList(transactionMessage.signatureCount.toInt()) { ByteArray(ownerLength) }.apply {
+            Transaction(MutableList(transactionMessage.signatureCount.toInt()) { ByteArray(signatureLength) }.apply {
                 set(signerIndex, signature)
             }, transactionMessage)
         }
